@@ -1,0 +1,5 @@
+#!/usr/bin/perl
+
+
+if (( my $x = shift) ) { print 'yes' if $x eq 'x' };
+

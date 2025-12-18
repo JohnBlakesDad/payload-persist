@@ -1,0 +1,63 @@
+#!/usr/bin/perl
+
+use CXN::PersistBIN ;
+
+$sub_data -> {'hash'}[0] = 'x' ; 
+$sub_data -> {'hash'}[1] = 'y' ; 
+$sub_data -> {'hash'}[2] = 'z' ;
+
+# print "$sub_data" ;
+
+# Here you see that subdata is an address to a hash
+
+$data ->[0] = 'a' ;
+$data ->[1] = 'b' ;
+$data ->[2] = 'c' ;
+$data ->[3] = 'd' ;
+
+$data ->[4] = $sub_data ; 
+
+# I made a hash and then ( belowmade the 5th element the address of the 
+# structure "$sub_data"
+
+sub say { $word = shift; print $word."\n" } 
+
+# Here is a funtion (sub) called "say" and then I put it into the structure
+
+$data ->[5] = \&say ;
+
+# Here I access the sub that is stored in the structure 
+
+&{$data ->[5]}('hello') ;
+
+# Now we call PersistBIN.pm and use it to "freeze" the structure, and...
+
+$ob = new CXN::PersistBIN ;
+
+$fzfil="bintst.fz" ;
+
+# *.fz is a CXN mime type
+
+#$ob -> freeze ( $data , $fzfil ) ;
+
+# oops an error, something about not being able to store code, argh !!
+# So we get rid of the "say" function, sadly, by setting the array value to
+# undef.  (it's commented out because the module dies on that failure)
+
+$data -> [5] = undef ;
+
+# And freeze again
+
+$ob -> freeze ( $ob , "binfile" ) ;
+
+# Success !!
+# Now lets get it back and serialize it and print it
+
+$struct = $ob -> thaw ( "binfile" ) ;
+
+use CXN::PersistOB ;
+
+$other_ob = new CXN::PersistOB.pm ;
+
+print $other_ob -> serialize ( $struct ) ;
+

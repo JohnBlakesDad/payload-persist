@@ -1,0 +1,69 @@
+#!/usr/bin/perl -w
+
+use strict                              ;
+
+unshift (@INC, '/home/httpd/cgi-bin/')  ;
+
+use Depth                               ;
+my $depth = new CXN::Depth              ;
+ 
+print $depth -> start_html              ;
+
+$depth -> set_db('PUNY')              ; 
+ 
+my $uri = $cgi -> {'env'}{'SCRIPT_NAME'}.'/'        ;
+
+$cgi->{'vars'}{'depth'} = "PerlOS"
+                      if ! defined $cgi->{'vars'}{'depth'} ; 
+
+$depth_str = $cgi->{'vars'}{'depth'}  ; 
+@$depth_arr = split (/ +/, $depth_str) ;
+$util -> {depth_arr} = $depth_arr        ;
+$util -> {db} = 'PUNY'          ;
+$util -> {secret} =  'tooloot'            ;
+
+print $html -> font(5)                   ;
+print $html -> div('left')               ;
+my $level ;
+my $out_str = $uri.'?depth='             ; 
+my $pr_str ;
+foreach $level (@$depth_arr) {
+    $out_str .=$level." "              ;   
+    $pr_str = uri_escape ( $out_str )    ;
+print "<a href=$pr_str> $level > </a>"  ;
+}
+
+print "<BR><BR> $level ";
+print $html -> unfont                    ;
+print $html -> undiv()                   ;
+my $search_str = $$depth_arr[$#$depth_arr] ;
+$search_str =~ s/<[^<>]*>//g;
+print "
+<FORM METHOD=POST ACTION=\"/cgi-bin/Depth/\" ENCTYPE=\"application/x-www-for
+m-urlencoded\" >
+<INPUT TYPE=\"text\" NAME=\"search_input\" >
+<INPUT TYPE=\"hidden\" NAME=\"depth\" VALUE=\"$depth_str\">
+<INPUT TYPE=\"submit\" VALUE=\"Search $search_str \">
+</FORM>
+" ;
+
+#<INPUT TYPE=\"submit\" NAME=\"search\" VALUE=\"SEARCH\">
+my $x = $depth -> depth(@$depth_arr)     ;
+
+my $VAR1                                 ;
+$x = eval $x                             ;
+$util -> search($cgi->{'vars'}{'search_input'})
+   if $cgi->{'vars'}{'search_input'};
+
+$util -> {'click_depth'} = 'yes' ;
+$util -> {'upd'} = 'yes' ;
+$util -> {'secret'} = 'tooloot' ;
+$util -> {'db'} = 'PUNY' ;
+
+print $util -> mk_table ( $x )      ;
+
+print $cgi -> serialize ($cgi)           ;
+
+print $html -> end                       ;
+
+exit;

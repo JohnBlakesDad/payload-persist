@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+print "hello\n" ;
+use strict                                   ;
+
+unshift (@INC, '/home/httpd/cgi-bin/')      ;
+
+#unshift (@INC, '/adm/lib/')      ;
+
+#use lib('/home/httpd/cgi-bin') ;
+
+use CXN::Depth                               ;

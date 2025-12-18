@@ -1,0 +1,14 @@
+hdb3/sav/www.thinman.com/images
+hdb3/sav/www.thinman.com/images/sav/images
+hdb3/sav/www.thinman.com/puny/images
+hdb3/sys_adm/adm/images
+hdb3/sys_adm/adm/punysite/html/images
+hdb3/sys_adm/images
+hdb4/puny.sav/1/home/httpd/html/images
+hdb4/puny.sav/1/home/httpd/html/html/images
+hdb4/puny.sav/1/home/httpd/html/sys_adm/images
+hdb4/puny.sav/4/adm/images
+hdb4/puny.sav/4/adm/punysite/html/images
+hdb4/puny.sav/4/images
+hdb4/puny.sav/4/httpd/html/images
+hdb4/puny.sav/4/httpd/htdocs/images

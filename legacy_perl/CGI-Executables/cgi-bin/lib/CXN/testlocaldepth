@@ -1,0 +1,57 @@
+#!/perl/bin/perl
+
+use LocalDepth ;
+$ob = new LocalDepth                                        ;
+
+print $ob -> db('test'),"\n"                                ;
+
+$ob -> fmt                                                  ;
+$ob -> write                                                ;
+
+print "layer\n" ;
+
+print $ob -> layer (''),"\n" ;
+
+print "dump NEW\n " ;
+print $ob->dump( eval $ob -> depth('NEWNEW') ),"\n"           ;
+
+print $ob -> upd('NEWNEW', 'a', 'b', 'ccc', 'd', 'new value' ),"\n" ;
+print $ob -> upd('NEWNEW', 'a', 'bbbbb kfjkjf jfjf', 'c   jfjfjf cc', 'd', 'new value' ),"\n" ;
+
+print $ob->dump( eval $ob -> depth('NEWNEW') ),"\n"           ;
+exit;
+print $ob -> upd('NEWNEW', 'a', 'b', 'c', 'd', 'value' ),"\n" ;
+print $ob->dump( eval $ob -> depth('NEW') ),"\n"           ;
+exit;
+
+
+print $ob -> upd('new2', 'a', 'b', 'value' ),"\n"           ;
+
+print $ob -> upd('new2', 'a', 'bb', 'value' ),"\n"          ;
+ 
+print $ob->dump( eval $ob -> depth('new2') ),"\n"           ;
+
+#print $ob -> del('new2', 'a') ,"\n"                        ;
+
+print $ob->dump( eval $ob -> depth('new2') ),"\n"           ;
+
+
+
+exit                                                       ;
+
+print $ob -> del( 'john ', 'info', 'test', 'infoddd', 'infodddavav' ), "\n" ;
+
+
+#          'test' => {
+#                      'infoddd' => {
+#                                     'infodddavav' => undef
+#                                   },                                    
+
+print $ob->dump( eval $ob -> depth('john')),"\n"    ;    
+ 
+print $ob -> upd( "john",  "info", "test",  'infoddd', 'infodddavav', '77ddd7444777' ), "\n" ;
+
+print $ob->dump( eval $ob -> depth('john')),"\n" ;    
+
+exit ;
+

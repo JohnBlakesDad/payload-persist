@@ -1,0 +1,13 @@
+#!/usr/bin/perl -w
+
+use strict                       ;
+
+unshift (@INC, '/home/httpd/cgi-bin/lib') ;
+
+use CXN::JavaScript ;
+
+my $js = new CXN::JavaScript ;
+
+print $js -> js_popup ;
+
+exit;

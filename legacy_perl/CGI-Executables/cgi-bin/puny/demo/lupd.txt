@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use LocalDepth;
+
+use Gopts ; eval Gopts::set_opts         ;
+$ob = new LocalDepth                     ;
+
+sub string_to_arr {
+     my $val                             ;
+     my $str = shift                     ;
+     if ( $str ne '' ) {
+       @$val = split(/\n/, $str )        ;
+     }
+     return $val ;
+}
+
+$ob -> db($opt_db)                       ;
+
+$ob -> write                             ;
+$ob -> fmt                               ;
+
+my @depth_arr = split (' ', $opt_depth ) ;
+
+if ( $opt_val eq '' ) { $val = undef }
+
+else { $val = string_to_arr($opt_val) }
+
+print $ob -> upd(@depth_arr, $val)             ;
+
+$struct = $ob -> depth('ale1')             ;
+print $struct ;
+print $ob -> dump( eval $struct ) ;
+
+$ob -> DESTROY                           ; 
+
+exit 
+
+
+copyright CXN, Inc. copy only with permission, email john@thinman.com

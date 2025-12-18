@@ -1,0 +1,51 @@
+package Demo ;
+
+sub new {
+    my $self = {}                                         ;
+    my $class = shift                                     ;
+    $self -> {'dir lists'} = []                           ;
+    bless ($self, $class)                                 ;
+    return ( $self )
+}
+
+
+sub ls_it {
+    my $self = shift                                      ;
+    my @dirs = @_                                         ;
+    my $arr                                               ;
+    my $dir ;
+    my $arr_of_dirs                                       ;
+    foreach $dir (@dirs) {
+      @$arr_of_dirs = `ls $dir`                        ;
+      shift @$arr_of_dirs ;  shift @$arr_of_dirs          ;  
+      $self -> {'dir lists'}{$dir} = 'xxx'
+    } 
+}
+
+sub show_ls {
+    my $self = shift ;
+    my @dirs = @_     ;
+    my $tmp_arr, $tmp_str , $out_str ;
+      foreach $dir (@dirs) { 
+        @$tmp_arr = @{$self -> {'dir lists'}{$dir}}          ;
+        $tmp_str =  join (' ', @$tmp_arr )                   ;
+        #  $out_str = $out_str."\n".$tmp_str                    ;
+        $out_str .= "\n.$tmp_str"                            ;
+      }
+    return $out_str
+}
+
+sub dump_demo {
+     my $self = shift                                        ;             
+     my $struct = shift                                      ;
+     my $ob, $return                                         ;
+     use DeepDB                                              ;
+     $ob = new DeepDB                                        ;
+     $return = $ob -> dump($struct)                          ;
+     return $return                                          ;
+}
+     
+1;
+
+
+copyright CXN, Inc. copy only with permission, email john@thinman.com

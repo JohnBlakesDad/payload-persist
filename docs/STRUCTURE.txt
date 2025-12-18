@@ -1,0 +1,158 @@
+================================================================================
+PAYLOAD-PERSIST SYSTEM STRUCTURE
+================================================================================
+
+Payload (always JSON for consistency + recognizability)
+├── UPDATE / CREATION
+│   ├── Input
+│   │   ├── Graphical UI (vivify.client)
+│   │   └── Curses CLI (vivify.client)
+│   ├── Autovivify
+│   │   └── Build un‑schema'd JSON (hash of hashes)
+│   ├── Secrecy
+│   │   └── Encrypt secrets
+│   ├── Freeze
+│   │   └── Serialize payload → prepare for IP send
+│   └── Server
+│       ├── Strip first two layers (name, app‑name/topic)
+│       ├── Remove large binary chunks
+│       └── Store remainder
+│           ├── JSON file
+│           └── Blob (binary large object)
+│               ├── Must have meaningful text name (metadata)
+│               └── Stored unencrypted for admin ease
+│                   ├── Secrets remain client‑encrypted
+│                   └── Same password usable for casual access
+│
+└── RETRIEVAL
+    ├── Input
+    │   ├── Graphical UI (vivify.client)
+    │   └── Curses CLI (vivify.client)
+    ├── Payload creation
+    │   ├── Input name (db top layer)
+    │   ├── App/topic name
+    │   ├── Next layer + desired value
+    │   ├── db‑user secret + app‑name
+    │   └── Access JSON file
+    │       └── Traverse depth (Perl‑like hash of hashes)
+    ├── Return
+    │   ├── Desired value (encrypted payload)
+    │   └── If structure named → whole or subset returned
+    └── Client
+        └── Reverse creation process
+            └── Print data
+
+================================================================================
+DATABASE STRUCTURE
+================================================================================
+
+Database
+└── User (db name = user's name)
+    └── Apps / Topics
+        └── Payload (always JSON)
+            ├── Metadata
+            │   ├── Blob name (meaningful text string)
+            │   └── App/topic identifiers
+            ├── Secrets
+            │   └── Encrypted client-side (high-security context)
+            └── Binary chunks
+                └── Stored unencrypted for admin ease
+
+================================================================================
+CODE ARCHITECTURE (Conceptual Components)
+================================================================================
+
+payload-persist/
+├── vivify/                    # Autovivification & Input Handling
+│   ├── __init__.py
+│   ├── autovivify.py         # deep_update, hash-of-hashes builder
+│   ├── ui.py                 # Graphical UI (future)
+│   └── cli.py                # Curses CLI (future)
+│
+├── secrecy/                   # Encryption & Decryption
+│   ├── __init__.py
+│   └── crypto.py             # GPG-based encryption (client-side)
+│
+├── freeze/                    # Serialization & Protocol
+│   ├── __init__.py
+│   └── protocol.py           # JSON serialization, message creation
+│
+├── server/                    # Server Operations
+│   ├── __init__.py
+│   ├── server.py             # Main server loop
+│   ├── network.py            # Socket handling
+│   └── handlers.py           # Request handlers
+│
+├── db/                        # Database & Storage
+│   ├── __init__.py
+│   ├── storage.py            # File-based storage operations
+│   ├── auth.py               # User authentication
+│   └── fs_mapper.py          # Filesystem mapping
+│
+├── lib/                       # Shared Utilities
+│   ├── __init__.py
+│   ├── config.py             # Configuration
+│   └── utils.py              # General utilities
+│
+├── client.py                  # Client CLI entry point
+├── docs/                      # Documentation
+│   ├── STRUCTURE.txt         # This file
+│   ├── ARCHITECTURE.md       # Detailed architecture (Mermaid diagrams)
+│   └── PHILOSOPHY.md         # Design philosophy
+│
+└── static/                    # Web UI (future)
+    ├── index.html
+    └── style.css
+
+================================================================================
+COMPONENT MAPPING (Current → Conceptual)
+================================================================================
+
+Current Structure              Conceptual Component
+─────────────────────────────  ──────────────────────────────────────
+lib/utils.py (deep_update)  →  vivify/autovivify.py
+lib/crypto.py               →  secrecy/crypto.py
+lib/protocol.py             →  freeze/protocol.py
+server.py                   →  server/server.py
+lib/network.py              →  server/network.py
+lib/storage.py              →  db/storage.py
+lib/auth.py                 →  db/auth.py
+lib/fs_mapper.py            →  db/fs_mapper.py
+lib/config.py               →  lib/config.py (stays)
+lib/utils.py (other)        →  lib/utils.py (stays)
+
+================================================================================
+DATA FLOW
+================================================================================
+
+CLIENT (STORE)
+  1. vivify     → Build JSON structure (autovivify)
+  2. secrecy    → Encrypt secrets (client-side, high-security)
+  3. freeze     → Serialize payload (JSON)
+  4. network    → Send to server
+
+SERVER (STORE)
+  5. network    → Receive payload
+  6. freeze     → Deserialize payload
+  7. db         → Strip layers (name, app-name)
+  8. db         → Store JSON + blobs
+
+CLIENT (RETRIEVE)
+  1. freeze     → Create retrieval request
+  2. network    → Send to server
+
+SERVER (RETRIEVE)
+  3. network    → Receive request
+  4. db         → Authenticate user
+  5. db         → Locate JSON file (by app-name)
+  6. db         → Traverse hash structure (Perl-like)
+  7. freeze     → Serialize response
+  8. network    → Send to client
+
+CLIENT (RETRIEVE - continued)
+  9. network    → Receive response
+  10. freeze    → Deserialize payload
+  11. secrecy   → Decrypt secrets (if encrypted)
+  12. vivify    → Display data
+
+================================================================================

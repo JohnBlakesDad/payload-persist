@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+
+use strict                       ;
+
+#unshift (@INC, '/adm/lib/')      ;
+unshift (@INC, '/home/httpd/cgi-bin/')      ;
+
+use CXN::Depth                               ;
+my $depth = new CXN::Depth                   ;
+
+print $depth -> start_html ;
+
+$depth -> hidden_struct ;
+#print $depth->{hidden_struct}{depth_string}."hidden stru" ;
+
+$depth -> set_db(
+                 'db' => $depth->{hidden_struct}{db}, 
+                 'secret'=> $depth->{hidden_struct}{secret},
+                 'write'=>'yes' ,
+                 'upd'=>'yes'
+                )                            ; 
+
+$depth->depth_array ( depth_string => $depth->{hidden_struct}{depth_string} )  ;
+
+my @depth_array = @{$depth -> {depth_array}}      ;
+
+my $upd_string = $depth -> cgi -> {'vars'}{'upd_string'}  ; 
+
+$depth -> db -> write                                     ;
+
+if ( $upd_string =~ /^\s*$/ ) {
+  $depth -> db -> upd ( @depth_array, undef )      ;
+}
+else { 
+  my $upd_array                                             ;
+  @$upd_array = split ( "\n" , $upd_string )                ;
+  $depth -> db -> upd ( @depth_array, $upd_array ) 
+}
+
+print $depth -> vector( 'uri'=> '/cgi-bin/Depth.lib/') . "<BR>" ;
+print $depth->html->font(5) ;
+my $depth_array ;
+if ( defined $depth-> {hidden_struct}{base_depth_array} ) {
+  $depth_array = $depth-> {hidden_struct}{base_depth_array} ;
+  print join (" ", @$depth_array )." base<BR>" 
+}
+else { 
+  $depth_array = $depth -> {depth_array} ;
+  print join (" ", @$depth_array )." regular<BR>" 
+}
+
+print join ( " ", @$depth_array ) . "<BR>" ;
+
+my $x = $depth -> db -> depth ( @$depth_array )    ;
+my $VAR1 ;
+my $x = eval $x ;
+print $depth -> util -> mk_table ( $x ) ;
+print $depth->html->text ;
+print $depth -> {pretty_print}='yes' ; 
+print $depth -> serialize ( $depth -> util ) ;
+
+exit ;

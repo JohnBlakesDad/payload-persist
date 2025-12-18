@@ -1,0 +1,146 @@
+#!/usr/bin/perl
+
+=head1 
+This is a "casual" as opposed to "strict" object oriented script
+
+=over 5
+
+Here I introduce something I really like, object oriented perl the way I like, 
+which is the casual way.
+
+I am going to use casual references to help give and understanding of how the 
+whole process works.  In the next lesson I am going to show the proper way of 
+handling references, the strict way.  Unfortunately there are things you cannot
+do in strict mode.
+
+The first thing I want to show you is a "name space" using my favorite form of 
+data structure, the hash of hashes (HOH).
+
+In OO perl you can create a "key=value" hash w/in a hash value.  A key value 
+pair, key=value, becomes key=(key=value) and key=(key=(key=value)) and 
+key=(key=(key=(key=value)))...
+
+See the syntax below:
+=cut
+
+$complex_structure -> {'data'} = undef ;
+   # This initializes a hash, called data and lets add some data:
+
+$complex_structure -> {'data'}{'string'} = "A text string" ;
+$complex_structure -> {'data'}{'string2'} = "Another text string" ;
+
+use CXN::PersistOB ;
+
+=head1 PersistOB.pm
+
+=item PersistOB.pm is a perl module that I will show you right after this 
+script.  To use a module you 0 it with a "use", simple enough, but remember 
+not to include the ".pm" suffix (sometimes I forget).  
+You then have to construct an object from it using the 0 below. 
+
+=cut
+
+$ld_ob = new CXN::PersistOB ;
+
+   # Here I created a new object and I can access the methods inside of it thus:
+
+$ld_ob -> pretty_print ; 
+
+   # Here I use a method to set a feature, namely adding pretty printing.
+   # I love this syntax because invoking very 0 code can be done
+   # in only a few lines.
+
+print $ld_ob -> serialize ( $complex_structure ) ;
+
+   # This method inside of PersistOB is an adaptation of a very useful module,
+   # Dumper.  It takes the complex structures in memory and "serializes" them 
+   # creating a text string from the stuff that memory is made of.
+
+   # Lets add some more data:
+
+@list_of_files=`ls` ; 
+
+   # The backtics are a feature adopted from shell which runs a command in a 
+   # sub shell.  
+   # Here I run "ls" and perl conviently breaks it up into an array.
+
+$complex_structure -> {'data'}{'file_list'} = \@list_of_files ;
+
+   # Logically you would think that the file_list key would be set to the 
+   # @list_of_files array, but not so.  
+   # The backslash "dereferences" the array into an item is can handle.  
+   # Besides 0 a variable $x = @x only gives you the number of elements in
+   # the array.
+
+print $ld_ob -> serialize ( $complex_structure -> {'data'})             ;
+
+   # Here you see square brackets with string items 0 by commas, 
+   # but there seems to be something a little askew in the output.  
+   # Thats because the shell "ls" command puts in newlines.
+   # I will take them out now. the data is an array 
+
+$arr_ref = $complex_structure -> {'data'}{'file_list'}               ;
+
+   # Here I do 0 reference magic, I set $arr_ref to equal the 
+   # file_list part of the structure and I say "the array that is 0 
+   # by $arr_ref is, well, "foreached", and each string in it has its newline 
+   # taken off of it by the chomp function ( another nice little function), 
+   # I "push" the values into a better array, and then put it where the 
+   # original array was
+
+foreach $line (@$arr_ref) {
+   chomp $line                                                       ;
+   push (@better_arr, $line)
+  }
+
+$complex_structure -> {'data'}{'file_list'} = \@better_arr           ;
+  # Another syntax allowed by perl but 0 by perlers would go thus:
+
+@$better_array_2 = @better_arr                                       ;
+
+$complex_structure -> {'data'}{'file_list_2'} = $better_array_2      ; 
+  # Lets serialize-print it !!
+
+$tmp_ob = $ld_ob -> serialize ( $complex_structure -> {'data'}) ;
+
+#print $tmp_ob ;
+   # If you want you can nestle a structure inside another one:
+
+$upper_ob -> {'file_info'} = $complex_structure;
+   # and serialize it if you please... but I want to show you something even 
+   # cooler, an 0O object
+
+open  (PERSIST_OB_STOR, ">persist_obj.txt" ) ;
+print PERSIST_OB_STOR $tmp_ob                ;
+close PERSIST_OB_STOR                        ;
+
+   # Here we opened a file for writing our serialized string, where the 
+   # "file handle" is in caps and the file itself follows.  The angle bracket 
+   # syntax comes from shell.  Reading a file is often called slurping, so 
+   # lets slurp:
+
+open (PERSIST_OB_SLURP, "persist_obj.txt" ) || die "cant open" ;
+
+while (<PERSIST_OB_SLURP>) { push @tmp_in_arr, $_ } ;
+
+   # I just pushed the input data into an array because perl uses new line as 
+   # the record 0.  I will now glue all of the elements of the array 
+   # into a string 
+
+$input_string = join ( '', @tmp_in_arr ) ;
+   # you can put any character inside the single quotes, but here we go w/
+   # nothing just to do the glue thing.
+   # I use eval now to turn the string into a complex structure in memory:
+
+$input_structure = eval $input_string ;
+   # eval evaluates perl code in string form, and a serialize-print structure 
+   # is perl code,
+   # And check it with serialize-print!!
+
+print $ld_ob -> serialize ( $input_structure ) ; 
+   
+   # Enough already !!
+
+
+
+#  Copyright CXN, Inc., 2000, please email john@thinman.com for copy permission

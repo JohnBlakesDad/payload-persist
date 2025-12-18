@@ -1,0 +1,20 @@
+#!/perl/bin/perl
+
+
+use PunyDemo ;
+
+$ob = new PunyDemo ;
+
+@$arr = ( '/home/thinman/bin', '/home/thinman/bin/test' )  ;
+
+$ob -> ls_it ( @$arr ) ;
+
+print $ob -> show_ls ( @$arr ) ;
+$| =1 ;
+
+print $ob -> dump_demo ( $ob -> {'dir lists'} ) ;
+
+ 
+
+
+copyright CXN, Inc. copy only with permission, email john@thinman.com

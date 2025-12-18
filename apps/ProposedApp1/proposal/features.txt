@@ -1,3 +1,0 @@
-expense tracking
-forecasting
-alerts

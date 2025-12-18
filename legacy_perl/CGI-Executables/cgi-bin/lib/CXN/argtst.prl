@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use strict ;
+
+print join ( '-', @ARGV ), "\n" ;
+
+print $ARGV[$#ARGV], "\n" ;
+
+$num = $#ARGV ;
+
+
+print $num,"\n" ;
+
+@arr = `ls` ;
+
+$num = @ARGV ;
+
+print "\n$num\n" ;
+
+print $num++,"\n" ;
+
+print $num,"\n" ;
+
+$num += 3 ;
+
+print $num ,"\n" ;
+
+$num .= "xxx" ;
+
+print $num ,"\n" ;
+
+

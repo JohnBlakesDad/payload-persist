@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+use LocalDepth;
+
+use Gopts ; eval Gopts::set_opts         ;
+$ob = new LocalDepth                     ;
+
+$ob -> db($opt_db)                       ;
+
+$ob -> write                             ;
+$ob -> fmt                               ;
+
+my @depth_arr = split (' ', $opt_depth ) ;
+
+$ob -> del(@depth_arr)                   ;
+
+$struct = $ob -> depth('ale1')           ;
+
+print $ob -> dump(eval $struct) ; 
+
+$ob -> DESTROY                           ; 
+
+exit 
+
+
+copyright CXN, Inc. copy only with permission, email john@thinman.com

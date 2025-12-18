@@ -1,0 +1,39 @@
+<html>
+<head>
+<title>OUR NEXT MEETING...................</title>
+
+</head>
+
+<body bgcolor="#000000">
+<table  border="0" width="755" >
+  <tr>
+    <td height="402"> 
+      <p align="center"><font color="#FFFF00" size="+5">First Meeting</font></p>
+      <p align="center"><font size="+1" color="#FFFF00">This will be a short syntax 
+        lesson followed by brief case studies showing how you can implement perl 
+        in your environment. We will also be planning future topics and events.</font></p>
+      <p align="center"><font size="-1" color="#B0B0FF">refreshments will be served 
+        </font></p>
+      <p align="center"><font color="#80FF00" size="+1">Feb. 22nd, Tues. after 
+        President's Day</font></p>
+      <p align="center"><font color="#80FF00" size="+1">@IBM, 57th and Madison 
+        Ave.</font></p>
+      <div align="center">
+        <table width="75%" border="0">
+          <tr> 
+            <td height="44"> 
+              <div align="center">
+                <p><font color="#F92F57" size="+3"><a href="mailto:info@thinman.com">Very 
+                  Important, RSVP </a></font></p>
+                <p><img src="../images/mong1.gif" width="237" height="129"></p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      </td>
+  </tr>
+</table>
+<br>
+</body>
+</html>

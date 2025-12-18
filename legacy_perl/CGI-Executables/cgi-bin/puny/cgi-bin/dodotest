@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+use CGI;
+#use LocalDepth ;
+#use URI::Escape ;
+#
+$query = new CGI;
+#$ob = new LocalDepth ;
+
+#start printing here
+$TITLE="DepthDB";
+$script_name = $query->script_name;
+
+$path_info = $query->path_info;
+
+print $query->header;
+print "hello";
+print $query->end_html;
+

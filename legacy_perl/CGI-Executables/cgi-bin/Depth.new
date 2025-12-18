@@ -1,0 +1,39 @@
+#!/usr/bin/perl -w
+
+use strict                              ;
+
+unshift (@INC, '/home/httpd/cgi-bin/')  ;
+
+use CXN::Depth                          ;
+my $depth = new CXN::Depth              ;
+ 
+print $depth -> start_html              ;
+
+
+$depth -> set_db('db'=>'PUNY', 
+                 'secret'=>'tooloot',
+                 'write'=>'yes')        ; 
+ 
+#$depth -> depth_array('default_array'=> [ 'PerlOS' ],
+#                      'test'=>'test'
+#                     );
+
+$depth -> depth_array('default_array'=> [ 'PerlOS' ]) ;
+
+print $depth -> html -> font(5)                   ;
+print $depth -> html -> div('left')               ;
+print $depth -> depth_array ( depth_string => 'PerlOS' )                   ;
+print $depth -> vector ( depth_string => 'PerlOS' )                   ;
+print $depth -> mk_table                 ;
+#print $depth -> html -> unfont                    ;
+print $depth -> search                   ;
+print $depth -> html -> text ;
+print $depth -> pretty_print  ;
+print $depth -> serialize ( $depth -> cgi ) ;
+print $depth -> html -> untext ;
+#print $depth -> html -> unfont                    ;
+print $depth -> html -> undiv()                   ;
+#print $depth -> cgi -> serialize ($cgi)           ;
+print $depth -> html -> end                       ;
+
+exit;

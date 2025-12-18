@@ -1,0 +1,29 @@
+<html>
+
+<head>
+<title>PUNY Perl Unix of New York</title>
+
+</head>
+
+<frameset rows="95,*,32" Border=0>
+
+<frame src="top.htm" name="top" scrolling="no" noresize>
+
+<frameset cols="147,*,55" Border=0>
+
+<frame src="menu.htm" name="menu" scrolling="no">
+<frame src="main.htm" name="main">
+<frame src="right.htm" name="dead">
+</frameset>
+
+<frame src="bottom.htm" name="bottom" scrolling="no" noresize target="contents">
+<noframes>
+<body>
+
+  <p>This page uses frames, but your browser doesn't support them.</p>
+
+  </body>
+  </noframes>
+</frameset>
+
+</html>

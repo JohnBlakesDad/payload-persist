@@ -1,0 +1,57 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE> </TITLE>
+</HEAD>
+<BODY>
+
+<FONT SIZE=5><P ALIGN="CENTER"><IMG SRC="Image1.jpg" WIDTH=576 HEIGHT=72></P>
+</FONT><FONT SIZE=6>
+<P>The LibOS, EX/OS</P>
+
+</FONT><FONT SIZE=4><P>This OS give applications control over resources.  Each application manages its own disk blocks but allows sharing across apps.  Exos protects pages and blocks but the apps manage them.</P>
+
+<P>The LibOS’s allow incremental changes to the OS within the apps. Any programmer can specialize a LibOS with out affecting the rest of the system, they link with what they need, new OS functionalities are distributed with the application binary.</P>
+
+<P>While Linux allows only trusted dynamically loaded code, EX/OS leaves decisions to the software.</P>
+
+<P><IMG SRC="Image2.gif" WIDTH=465 HEIGHT=303></P>
+
+<P>Cheetah, 8 factors faster than NCSA on BSD,</P>
+<P><IMG SRC="Image3.gif" WIDTH=570 HEIGHT=375></P>
+
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>XN, gives access to stable storage structures by using UDF’s ( Untrusted Determinalistic Functions )  which are stored in templates.  They correspond to particular metadata formats.  The UDF is as expressive interperated language.  Lib F/S’s track their own rights and verify block ownership.</P>
+
+</FONT><FONT SIZE=5><P>UNIX Implementation</P>
+</FONT><FONT SIZE=4>
+<P>Process are mapped using shared tables.</P>
+<P>Forking does the usual copying or over writing.</P>
+<P>IPC includes all the usual primitives</P>
+<P>Files descriptors are the small integers used to access files, sockets, etc.</P>
+
+</FONT><FONT SIZE=5><P>Exploting Extensibility</P>
+</FONT><FONT SIZE=4>
+<P>XCP is a factor of 3 times faster in copying files because granular changes were allowed to be made to the access primitives</P>
+
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>CHETTAH:</P>
+
+<P>Merged File Cache and Retransmission Pool. Cheetah avoids all in-memory data touching (by the CPU) and the need for a distinct TCP</P>
+<P>retransmission pool by transmitting file data directly from the file cache using precomputed file checksums (which are stored with each</P>
+<P>file). Data are transmitted (and retransmitted, if necessary) to the client directly from the file cache without CPU copy operations</P>
+
+<P>Knowledge-based Packet Merging. Cheetah exploits knowledge of its per-request state transitions to reduce the number of I/O actions it</P>
+<P>initiates. For example, it avoids sending redundant control packets by delaying ACKs on client HTTP requests, since it knows it will be</P>
+<P>able to piggy-back them on the response</P>
+
+</FONT><FONT SIZE=5><P>HTML-based File Grouping. Cheetah co-locates files included in an HTML document by allocating them in disk blocks adjacent to that</P>
+<P>file when possible. When the file cache does not capture the majority of client requests, this extension can improve HTTP throughput by</P>
+<P>up to a factor of two.</P>
+</FONT><FONT SIZE=3>
+<P>&nbsp;</P>
+<P><IMG SRC="Image4.jpg" WIDTH=576 HEIGHT=97></P></FONT></BODY>
+</HTML>

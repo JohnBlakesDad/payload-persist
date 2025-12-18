@@ -1,0 +1,120 @@
+package FreezeDB ;
+
+use Storable     ;
+use Data::Dumper ;
+
+sub new {
+    my $self = {}                        ;
+    my $class = shift                    ;
+    $self -> {base_dir}     =  "/home/thinman/db/"  ;
+    $self -> {struct}       = undef      ;
+    $self -> {struct_tag}   = undef      ;
+    $self -> {write}   = undef           ;
+    bless ($self , $class)               ; 
+    return ( $self ) 
+}
+
+sub set_db {
+    my $self = shift                     ;
+    my $type = shift                     ;
+    if ( defined $type ) {
+     $self -> {db_type} =  $type                                          ;
+     $self -> {db_dir} = $self -> {base_dir}.'/'.$self -> {db_type}.'/'   ;
+     if ( -d $self -> {db_dir} && defined $type )
+          { $self -> {db_set} = 'yes'              ;
+            return $self -> {db_set}.": ".$self -> {db_type}  }
+     }
+     else { $self -> {db_set} = 'no' ;
+print "def $type" ;
+            return $self -> ls_dirs }
+}
+
+sub write { 
+    my $self = shift ; 
+    #print $self -> {db_set},"\n" ;
+    if ( $self -> {db_set} eq 'yes' ) {
+     $self -> {write} = 'yes'  }
+    else { die "db not set" }
+}
+
+sub no_write { my $self = shift ; $self -> {write} = 'no'  }
+
+sub struct {
+    my $self = shift                       ;
+    my $struct_tag = shift                 ;
+    # see if loaded struct_tag is one needed.
+    if ( $self -> {struct_tag} ne $struct_tag ) { 
+     if ( $self -> {struct_tag} ne '' ) 
+      { $self -> sync if $self -> {write} eq 'yes' } 
+     $self -> load($struct_tag) 
+    }
+    $self -> {struct_tag} = $struct_tag                  ;   
+    return $self -> {struct_tag}
+}
+
+sub load { 
+    my $self = shift                                     ;
+    my $freeze_file = shift                              ;
+    my $freeze_file = $self -> {db_dir}.$freeze_file.'.fz'     ;
+    if ( -f $freeze_file ) {
+     $self -> {struct} = retrieve($freeze_file)          ;
+     $self -> {struct_tag} = $freeze_file                ;
+    }
+    else { $self -> {struct} = {} }
+}
+
+sub sync {
+    my $self = shift                                     ;
+    my $freeze_file = $self -> {struct_tag}              ;
+    my $freeze_file = $self -> {db_dir}.$freeze_file.'.fz' ; 
+    $self -> dump                                        ;
+    my $store_arr = $self -> {struct}                    ;     
+    if ( $self -> {write} eq 'yes' ) {
+    my $dirname = $freeze_file                           ;
+    $dirname =~ s/^(.*)\/[^\/]+$/$1/                     ;
+    if ( ! -d $dirname ) { 
+     print "Making: $dirname\n"                          ;
+     `mkdir -p $dirname` 
+    }                                                    ;
+    my $freeze_file_tmp = "$freeze_file.$$.tmp"          ;
+    store( \%$store_arr, $freeze_file_tmp ) ;
+                                    #&& print STDERR $freeze_file,"\n" ;
+    rename( $freeze_file_tmp , $freeze_file ) 
+              || warn "rename failed: $freeze_file_tmp , $freeze_file" ;
+    print LOG "$freeze_file_tmp , $freeze_file\n" ;
+    }
+    else { warn "No write permission" } ;
+}
+
+sub dump {
+    my $self  = shift                                    ;
+    my $ref = $self -> {struct}                          ; 
+    $dump_str = Data::Dumper->new([$ref])                ;
+    $dump_str->Indent(0) if $self -> {indent} ne 'yes'   ;
+    my $ret = $dump_str->Dumpxs                          ;
+    $dump_str1 = ''                                      ;
+    return $ret
+}
+
+sub ls_files {
+    my $self = shift                                     ;
+    my $dir = $self -> {base_dir}."/".$self -> {db_type} ;
+    #$file_ls = `cd $dir ; /usr/bin/ls.exe *.fz`         ;
+    opendir dir , $dir                                   ;
+    my @tmp_files = readdir dir                               ;
+    my $file ;
+    foreach $file (@tmp_files) {  $file =~ /.*.\.fz$/ && push @files, $file }
+    return @files
+}                                                                             
+
+sub ls_dirs {
+    my $self = shift                                     ;
+    my $dir = $self -> {base_dir}                        ;
+    opendir (dir , $dir )|| warn "no $dir"                 ;
+    my $dirs                                             ;
+    @$dirs = readdir dir                                 ;
+    shift @$dirs ;  shift @$dirs ;
+    return @$dirs
+}                    
+
+1;

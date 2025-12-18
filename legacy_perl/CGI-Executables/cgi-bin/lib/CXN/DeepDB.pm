@@ -1,0 +1,237 @@
+package DeepDB                                        ;
+
+use FreezeDB                                          ;
+use Data::Dumper                                      ;
+#use strict                                           ;
+
+sub new {  
+    my $self = {}                                         ;
+    my $class = shift                                     ;
+    $self -> {DB} =  new FreezeDB                         ;
+    my $type = shift                                      ;  
+    if ( $type ne '' ) { $self -> db($type) }             ;
+    $self -> {fmt} = 'no'                                 ;
+    bless ($self, $class)                                 ;
+    return ( $self ) 
+}
+
+sub db {
+    my $self = shift                                      ;
+    if ( my $type = shift ) {
+    $self -> {DB} -> set_db($type)                        ;
+    }
+    else { 
+      @$dirs_arr = $self -> {DB} -> ls_dirs               ;
+      return $self ->dump( $dirs_arr )                    ;
+    }
+}
+
+sub write {
+    my $self = shift                                      ;
+    $self -> {DB} -> write                                ;
+    return 'write permission'                             ;
+}
+
+sub no_write {
+    my $self = shift                                      ;
+    $self -> {DB} -> no_write                             ;
+    return 'write permission'                             ;
+}
+
+sub fmt {
+    my $self = shift                                      ;
+    my $val = shift                                       ;
+    if (( ! $val ) or ( $val eq 'yes' )) 
+      { $self -> {fmt} = 'yes' }
+    else { $self -> {fmt} = 'no' }
+    return $val 
+}
+ 
+sub oldlayer {
+    my $self = shift                                      ;
+    $self -> {DB} -> struct(shift)                        ;
+    my $layer = $self -> mk_depth_path(@_)                ;
+    @$layer_arr = keys %{$layer} ;
+    return $self ->dump( $layer_arr)                      ;
+    #return $layer_arr
+}
+
+sub layer {
+    my $self = shift                                        ;
+    if ( $top_layer = shift ) {                             ;
+      $self -> {DB} -> struct($top_layer)                   ;
+      my $layer = $self -> mk_depth_path(@_)                ;
+      @$layer_arr = keys %{$layer}                          ;
+      return $self ->dump( $layer_arr)                      ;
+    }
+    else {
+      @$layer_arr = $self -> {DB} -> ls_files               ;
+      return $self ->dump( $layer_arr )                     ;
+    }
+}
+
+sub depth { 
+    my $self = shift                                      ;
+    $self -> {DB} -> struct(shift)                        ;
+    $self -> {depth} = $self -> mk_depth_path(@_)         ;
+    return $ret = $self -> dump($self -> {depth})                         ;
+    #return $self -> {depth} 
+}
+
+sub mk_depth_path {
+    my $self = shift                                      ;
+    my @things = @_                                       ;
+    my $depth ;
+    if ( $#things > -1 ) {
+     $depth = join ("'}{'", @things)                        ;
+     $depth = "\{'$depth'\}"                                ;
+    }
+    my $depth = "\$self -> \{DB\} -> \{struct\}$depth"    ;
+    return eval $depth ;
+}
+
+sub upd {
+    my $self = shift                                      ;
+    my $ret                                               ;
+    $self -> {DB} -> struct(shift)                        ;
+    my $val = pop @_                                      ;
+#print $val,"<-val\n" ;
+    my @things = @_                                       ;
+    if ( $#things > -1 ) {
+     $depth = join ("'}{'", @things)                        ;
+     $depth = "\{'$depth'\}"                                ;
+    }
+    my $upd_evalme = "\$self -> \{DB\} -> \{struct\}$depth = \$val" ;
+    my $val_2_replace = eval "\$self -> \{DB\} -> \{struct\}$depth"    ;
+    my $ref_chk = ref $val_2_replace ;
+    if (($ref_chk ne 'HASH')or($val eq 'undef')or($depth eq '')) 
+                          { 
+                             $ret = eval "$upd_evalme" ; $self -> sync ; 
+                             # print "$upd_evalme" 
+                          } 
+    elsif (($ref_chk eq 'HASH') and (keys %$val_2_replace == 0 ))
+                          { 
+                             $ret = eval "$upd_evalme" ; $self -> sync ; 
+                             # print "$upd_evalme" 
+                          } 
+    #elsif (($ref_chk eq 'HASH') and (keys %$val_2_replace == -1 ))
+    else { $ret = "Delete HASH first" }
+    return $ret
+}
+
+sub build_depth_struct_str {
+    my $self = shift                                                     ;
+    my @things = @_                                                      ;
+    print join ('-', @things )," in buil<BR>" ;
+    print $#things,"things<BR>" ;
+    $struct_str = "\$self -> \{DB\} -> \{struct\}"                        ;
+    if ( $#things != -1 ) {
+    my $depth = join ("'}{'", @things)                                   ;
+    $depth = "\{'$depth'\}"                                              ;
+    $struct_str = $struct_str.$depth                                    ; 
+    }
+    return $struct_str                                        
+    }
+    
+
+sub del {
+    my $self = shift                                                     ;
+    $self -> write                                                       ;
+    print join ('-', @_ )," in arr<BR>"                                  ;
+    $self -> {DB} -> struct(shift)                                       ;
+    my @depth_arr = @_                                                   ;
+    print join ('-', @depth_arr )," dep arr<BR>"                                  ;
+    my @one_up_depth_arr = @_                                            ;
+    pop @one_up_depth_arr                                                ;
+    print join ( '-',  @one_up_depth_arr ) ," one up dep arr<BR>"                      ;
+    foreach $ele ( @one_up_depth_arr  ) { print $ele,"<BR>" }            ;
+    $num_of_one_up_arr =  @one_up_depth_arr                              ; 
+    my $struct_str = $self -> build_depth_struct_str(@depth_arr)         ;
+print $struct_str ,"stur str<BR>" ;
+    my $hash = eval $struct_str                                          ;
+    my $one_up_struct_str = $self -> build_depth_struct_str(@one_up_depth_arr) ;
+print $one_up_struct_str ,"on up stur str<BR>" ;
+    my $one_up_hash = eval $one_up_struct_str                            ;
+    my @keys = keys %{$one_up_hash}                       ; 
+    print $#keys, "num keys one up hash <BR>" ;
+    print "\nhash $hash one_up_arr $#one_up_depth_arr --num keys $#keys-- \n" ; 
+    print "xxxy",ref $hash,"yxxx" ;
+    if ( ref $hash ne 'ARRAY') {  
+
+print $num_of_one_up_arr, "num of one up <BR> " ;
+      if (( $num_of_one_up_arr == 0 ) or ( $#keys > 0 )){
+
+        print "delete $struct_str xx"                                         ;
+        eval "delete $struct_str"                                          ;
+
+      } 
+      else { my $val = 'undef'                                            ;
+             my $evalme = "$one_up_struct_str = $val" ;
+             eval $evalme  ;
+             print $evalme,"   xx"  ;
+           }
+    $self -> sync ; 
+    } 
+    else { $ret = "Data Exists" }
+    return $ret
+}
+    
+
+#    my $del_evalme = "delete \$self -> \{DB\} -> \{struct\}$depth"   ;
+#    #$one_up_evalme = "print keys %{$self -> \{DB\} -> \{struct\}$one_up_depth}"
+#        ;
+#    $one_up_evalme = "keys %\{\$self -> \{DB\} -> \{struct\}$one_up_depth\}"
+#    ;
+#    #print $out = eval $one_up_evalme ;
+#
+#    #my $del_evalme = "\$self -> \{DB\} -> \{struct\}$depth = undef" ;
+#
+#    $ret = eval $del_evalme                                                  ;
+#    $one_up_evalme = "keys %\{\$self -> \{DB\} -> \{struct\}$one_up_depth\}" ;
+#    #print  "\$self -> \{DB\} -> \{struct\}$one_up_depth\}" ;
+#    if ( eval $one_up_evalme < 1 )
+#     { my $evalme = "\$self -> \{DB\} -> \{struct\}$one_up_depth = undef";
+#      eval $evalme ;
+#      #print STDERR $evalme 
+#     }
+#    else { eval $del_evalme } 
+#                                        ;
+#    $self -> sync                                                            ;
+#}
+
+sub dump_name {
+    my $self = shift                                      ;
+    $self -> {dump_name} = shift                          ;
+}
+
+sub dump { 
+    my $self  = shift ;
+    my $ref = shift; 
+    if ( $ref ne '' ) { $self -> {depth} = $ref }  ;
+    #$ref = $self -> {depth}                        ;
+    $dump_str = Data::Dumper->new([$self -> {depth}]);
+    $dump_str->Indent(0) if $self -> {fmt} ne 'yes';
+    #$dump_str ->Names([$self -> {dump_name}])
+    #                    if $self -> {dump_name} ne ''     ;
+    $ret = $dump_str->Dumpxs ;
+    $dump_str = '';
+    return $ret ;
+}
+
+sub see_vols {
+    my $self = shift ;
+    my $out ;
+    @$out = split(/ +/, `echo ~/db/1998/*/*`); 
+    #return $self -> dump($out) ;
+    return $out 
+}
+
+sub sync {
+my $self  = shift ;
+$self -> {DB} -> sync if $self -> {DB} -> {write} eq 'yes';
+}
+
+sub DESTROY {
+}
+
+1;

@@ -1,0 +1,27 @@
+#!/usr/bin/perl -w
+
+use strict                       ;
+
+unshift (@INC, '/home/httpd/cgi-bin/') ;
+
+use CXN::DeepDB                  ;
+  my $depth = new CXN::DeepDB    ;
+
+use CXN::PersistOB               ;
+  my $pob = new CXN::PersistOB    ;
+
+print $depth -> db( 'test' ) ;
+
+print $depth -> write     ;
+
+my $depth_str = $depth -> depth ('HI') ;
+
+print $depth -> upd ('whowho','a', 'xxx' ) ;
+
+my $out ;
+my $VAR1 ;
+$out = eval $depth_str ;
+
+print $pob -> serialize( $out ) ;
+
+exit;

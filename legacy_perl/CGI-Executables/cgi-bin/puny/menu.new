@@ -1,0 +1,168 @@
+<html>
+
+<head>
+
+<title>Untitled Document</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
+</head>
+
+
+
+<style type="text/css">
+
+<!--
+
+
+
+          A:link {color: #CCCC00; text-decoration:none}
+
+
+
+          A:visited {color: #CCCC00; text-decoration:none}
+
+
+
+//       -->
+
+</style>
+
+
+
+<body bgcolor="#000000" text="#FFFFFF" link="#CCCC00">
+<font color="#990033"><b></b></font> 
+<table border="0" cellspacing="0" cellpadding="0" width=137>
+  <tr valign="bottom"> 
+
+    <td > 
+      <p><font color="#CCCC00" size="3" face="Times New Roman, Times, serif"><b><a href="what.htm" target="main">What 
+
+        is PUNY?</a></b></font></p>
+
+    </td>
+
+  </tr>
+
+  <tr valign="bottom"> 
+
+    <td ><hr><font color="#CCCC00" size="3" face="Times New Roman, Times, serif"><b><a href="project.htm" target="main">Projects 
+      &amp; Goals</a></b></font></td>
+
+  </tr>
+
+  <tr valign="bottom"> 
+
+    <td ><hr><font face="Times New Roman, Times, serif" size="3" color="#CCCC00"><b><a href="mailto:info@thinman.com">Please 
+      Contact </a></b></font></td>
+
+  </tr>
+
+  <tr valign="bottom"> 
+
+    <td >
+      <p><hr><font face="Times New Roman, Times, serif" size="3" color="#CCCC00"><b><a href="mission.htm" target="main">Mission
+
+        Statement</a></b></font></p>
+
+    </td>
+    <tr  valign="bottom">
+    <td >
+      <p><hr><font face="Times New Roman, Times, serif" size="4" color="white"><b><a href="http://www.nysia.org" target="main">NYSIA
+
+        </a></b></font></p>
+
+    </td>
+    </tr>
+
+<tr  valign="bottom">
+    <td >
+      <p><hr><font face="Times New Roman, Times, serif" size="3" color="white"><b><a href="http://www.perl.org" target="main">PERL Mongers
+
+        </a></b></font>
+      
+      </p>
+    </td>
+    </tr>
+
+
+
+  </tr>
+
+  <tr valign="middle"> 
+
+    <td ><font color="#990033"><b><a href = "javascript:b()" onmouseover = "doButtons('images/debian.logo.gif')" onmouseout = "doButtons('images/bl.blank.gif')"><img name="image1" src="images/pinguin.gif" border=0></a></b></font></td>
+
+  </tr>
+
+  <tr valign="middle" align="center"> 
+
+    <td  ><font color="#990033"><b><font color="#FFFFFF" size="2" face="Verdana, Arial, Helvetica, sans-serif"><img name=picture src="images/bl.blank.gif" border=0> 
+      </font></b></font></td>
+
+  </tr>
+
+</table>
+
+
+
+<script language="Javascript">
+
+
+
+
+
+function a() {
+
+OpenWin = this.open("http://www.nysia.com", "CtrlWindow", "toolbar=yes,menubar=no,location=no,scrollbars=yes,resizable=yes");
+
+}
+
+
+
+function b() {
+
+OpenWin = this.open("http://www.debian.com", "CtrlWindow", "toolbar=yes,menubar=no,location=no,scrollbars=yes,resizable=yes");
+
+}
+
+
+
+</script>
+
+
+
+<SCRIPT LANGUAGE="JavaScript">
+
+
+
+<!-- Begin
+
+
+
+var dlarge = new Image();
+
+
+
+dlarge.src = "images/debian.logo.gif";
+
+
+
+function doButtons(picimage) {
+
+
+
+document['picture'].src=picimage;
+
+}
+
+//  End -->
+
+</script>
+
+
+
+</body>
+
+</html>
+

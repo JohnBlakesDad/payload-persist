@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+use CXN::PersistOB ;
+
+$x -> {a} = 12 ;
+
+$ob = new CXN::PersistOB ;
+
+#$ob -> store_struct ( file , $x,  bin) ;
+
+

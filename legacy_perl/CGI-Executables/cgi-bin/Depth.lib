@@ -1,0 +1,54 @@
+#!/usr/bin/perl
+
+use strict                                   ;
+
+unshift (@INC, '/home/httpd/cgi-bin/')       ;
+#unshift (@INC, '/adm/lib/')                 ;
+
+use lib('/home/httpd/cgi-bin')               ;
+
+use CXN::Depth                               ;
+my $depth = new CXN::Depth                   ;
+ 
+print $depth -> start_html                   ;
+
+#print join ('<BR>', @INC )                  ;
+
+$depth->hidden_struct                        ;
+
+$depth -> set_db(
+                 'db'=>'PUNY', 
+                 'secret'=>'tooloot',
+                 'write'=>'yes',
+                 'upd' => 'yes'
+                )                            ; 
+
+#print $depth -> start_html                  ;
+
+$depth -> depth_array ( depth_string =>  'PerlOS'  )  ;
+
+#$depth -> depth_array ( depth_array => [ 'PerlOS' ] );
+ 
+print $depth -> html -> font(+4)             ;
+print $depth -> vector."<BR><BR>"            ;
+print $depth -> html -> font(4)              ;
+print $depth -> search                       ;
+print $depth -> html -> div('left')          ;
+
+#Allows Cell String to get update button 
+#$depth -> set_upd ( 'tooloot' ) ;
+
+print $depth -> mk_table                 ;
+
+print $depth -> html -> unfont                    ;
+print $depth -> html -> text ;
+print $depth -> pretty_print  ;
+print $depth -> serialize ( $depth -> util ) ;
+#print $depth -> html -> untext ;
+#print $depth -> cgi -> serialize ($cgi)           ;
+
+print $depth -> html -> unfont                    ;
+print $depth -> html -> undiv()                   ;
+print $depth -> html -> end                       ;
+
+exit;

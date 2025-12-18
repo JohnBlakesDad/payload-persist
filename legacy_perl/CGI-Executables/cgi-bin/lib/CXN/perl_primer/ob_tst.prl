@@ -1,0 +1,66 @@
+#!/Perl/bin/perl
+
+=head1 Persistence Test Script
+
+=over 5
+
+This little script shows how perl objects can create a really simple paradigm.
+
+The structures here are built dynamically and it shows how to access methods in a very uncomplicated way with dynamically built structures.
+
+=cut
+
+use strict ;
+use CXN::PersistOB ;
+
+my $ob = new CXN::PersistOB ;
+
+sub put_data {
+
+   my $file = shift ; 
+   my $tmp_struct = shift ;
+   $ob -> store_struct( $file , $tmp_struct ) ;
+
+}
+
+sub get_data {
+
+  my $new_struct ;
+  my $file = shift ;
+  $new_struct = $ob -> load_struct( $file ) ;
+  print $ob -> serialize ( $new_struct ) ;
+
+}
+
+my $tmp_struct ;
+
+my $command = shift ;
+my $file = shift ;
+
+my $data ;
+my $cnt = 0 ;
+
+foreach $data ( @ARGV ) {
+$cnt++ ;  
+$tmp_struct -> {'data'}{'lev'.$cnt} = $data ;
+}
+
+if ( $command eq 'store' ) {
+   &put_data($file, $tmp_struct)
+}
+
+elsif ( $command eq 'fetch' ) {
+   &get_data($file)
+}
+
+else { print "Usage: ob_tst store filename <data> <data>...\nor \n       ob_tst fetch filename\n " }
+
+
+
+
+  #Copyright CXN, Inc., 2000, please email john@thinman.com for copy permission
+  
+
+
+
+  

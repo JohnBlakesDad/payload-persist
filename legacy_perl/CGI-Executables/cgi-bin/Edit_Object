@@ -1,0 +1,61 @@
+#!/usr/bin/perl -w
+
+use strict                       ;
+
+#unshift (@INC, '/home/httpd/cgi-bin/') ;
+#unshift (@INC, '/adm/lib/')      ;
+
+use CXN::Depth                               ;
+my $depth = new CXN::Depth                   ;
+
+use CXN::JavaScript ; my $js = new CXN::JavaScript ;
+
+
+print $depth -> start_html                   ;
+print $js -> window_close_fxn                ;
+print $depth -> html -> font(+4)             ;
+
+$depth -> hidden_struct                      ;
+
+my $struct = $depth -> {hidden_struct}       ;
+
+$depth -> set_db(
+                'db' => $struct->{db},
+                'secret'=> $struct->{secret},
+                'write'=>'yes',
+                'upd'=>'yes'
+                )                            ;
+
+$depth -> depth_array ( depth_string => $struct->{depth_string} )       ;
+
+print $depth -> vector ( 'uri' => '/cgi-bin/Depth.lib/' )               ;
+print $depth -> html -> div('center')                                   ;
+print $depth -> html -> font(3)                                         ;
+
+print $depth -> form -> start_form ('Upd_Object', 'Upd_Object' )        ;
+my $upd_ob_opts_arr = [ 'new_ob', 'extend_ob', 'copy_ob', 'mv_ob', 'link_ob' ] ;
+print $depth -> form -> one_line ( 'Upd_Ob_String', 40, undef )."<BR>"  ;
+print $depth -> form -> radio ( 'Upd_Ob_Opts', $upd_ob_opts_arr , 'new_ob' )   ;
+#my $struct_string = CXN::Escape::uri_escape($struct_string)                ;
+my $struct_string = $depth -> serialize ( $depth->{hidden_struct} ) ;
+
+
+print $depth -> form -> hidden ( 'hidden_struct',  $depth->cgi->{'vars'}{'hidden_struct'} ) ;
+#print $depth -> form -> button ( "Upd_Object" )                         ; 
+print $depth -> form 
+     ->image('Upd_Object','/images/update_text.gif',
+                                  'onClick="javascript:window_close();"') ; 
+print $depth -> form -> end_form                                        ;
+
+print "<HR>"                                                            ;
+print $depth->form -> start_form ('Del_Object', 'Del_Object' )          ;
+print $depth->form -> hidden ( 'hidden_struct',  $depth->cgi -> {'vars'}{'hidden_struct'} ) ;
+print $depth->form -> button ( "Delete" )                               ;
+print $depth->form -> end_form                                          ;
+
+print $depth -> html -> text                                            ;
+print $depth -> cgi  -> serialize ($depth -> cgi)                       ;
+print $depth -> html -> untext                                          ;
+print $depth -> html -> end                                             ;
+
+exit;

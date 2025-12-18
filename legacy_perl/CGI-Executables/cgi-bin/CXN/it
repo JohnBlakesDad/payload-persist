@@ -1,0 +1,45 @@
+package CXN::JavaScript;
+
+sub new { my $self = {}                                        ;
+    my $class = shift                                    ;
+    bless ($self, $class)                                ;
+    return ( $self )
+}
+
+sub popup_fxn {
+   my $self = shift ;
+
+   return '
+<script language="JavaScript">
+<!--
+function popup_window(Link,Name,String) {
+    window.open(Link,Name,String) ;
+}
+// -->
+</script>
+'
+
+}
+
+sub popup_href {
+   my $self  = shift ;
+   my $thing = shift ; 
+   my $href  = shift ; 
+   my $name  = shift ; 
+   my $return_string = "<a href=\"javascript:popup_window(\'$href\'"  ;
+   if ( defined $name ) { $return_string =. "\'$name\'" }
+   else { $return_string =. "\'\'," }
+   my $arg                                                            ;
+   foreach $arg ( 'width', 'height', 'scroll' ) { 
+     if ( defined $arg ) { $return_string =. "\'$arg=$name\'" }
+     else { $return_string =. "\'$arg=\'\'," }
+   }
+   $return_string =. ")>$thing</a>"                                   ;
+   return $return_string
+} 
+
+sub DESTROY {
+    my $self = shift                                            ;
+}
+
+1;

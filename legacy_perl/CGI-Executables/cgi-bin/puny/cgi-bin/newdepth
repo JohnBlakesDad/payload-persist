@@ -1,0 +1,433 @@
+#!/Perl/bin/perl^M$
+^M$
+use CGI;^M$
+use LocalDepth ;^M$
+use URI::Escape ;^M$
+^M$
+$query = new CGI;^M$
+$ob = new LocalDepth ;^M$
+^M$
+#start printing here^M$
+$TITLE="DepthDB";^M$
+$script_name = $query->script_name;^M$
+^M$
+$path_info = $query->path_info;^M$
+^M$
+print $query->header;^M$
+^M$
+# if path_info is null then the script is loaded for the first time^M$
+# so create the frames^M$
+^M$
+if (( ! $path_info ) or ( $path_info =~ /^\/$/)) {^M$
+    &pr_frameset;^M$
+&xit^M$
+}^M$
+^M$
+###  This should be a css file ^M$
+print "<body background=\"/images/crinkpaper.jpg\" >";^M$
+^M$
+# Funnel subs to correct path_info frames^M$
+^M$
+&pick_db                        if  $path_info =~ /^\/ctls$/         ;^M$
+&pick_layer                     if  $path_info =~ /^\/layer$/        ;^M$
+&depth                          if  $path_info =~ /^\/depth$/        ;^M$
+&pr_canvas_gif                  if  $path_info =~ /^\/canvas_gif$/   ;^M$
+&upd                            if  $path_info =~ /^\/upd$/          ;^M$
+&search                         if  $path_info =~ /^\/search$/          ;^M$
+&search_depth                   if  $path_info =~ /^\/search_depth$/          ;^M$
+&del                            if  $path_info =~ /^\/del$/          ;^M$
+&new_fz                         if  $path_info =~ /^\/new_fz$/          ;^M$
+^M$
+^M$
+###This destroys the netdepth object and prints html end^M$
+^M$
+&xit;^M$
+^M$
+^M$
+### subs only below here^M$
+^M$
+### this creates the frameset^M$
+^M$
+sub pr_frameset {^M$
+print <<EOF;^M$
+^M$
+<html><head><title>$TITLE</title></head>^M$
+   <frameset cols="19,50">^M$
+      <frame src="$script_name/ctls"   name="depth_ctls">^M$
+      <frame src="$script_name/canvas_gif" name="depth_canvas">^M$
+   </frameset>^M$
+^M$
+EOF^M$
+}^M$
+^M$
+sub pick_db {^M$
+    $arr = $ob -> db()                     ;^M$
+    $arr = eval $arr                       ;^M$
+    @$arr = sort @$arr                     ;^M$
+    print "<H3> DataBases<\H3><HR>"        ;^M$
+    print $query->startform(-action=>"$script_name/layer",-TARGET=>"depth_ctls");^M$
+    print $query->radio_group( ^M$
+                               -name      => 'db_choice',^M$
+                               -Values    =>  $arr,^M$
+                               -linebreak => 'yes' ,^M$
+                               -Defualt   => 'cts'^M$
+                              );^M$
+    print " ".$query->submit(-name => 'PICK DB') ;^M$
+    print $query->endform;^M$
+    &xit ^M$
+}^M$
+^M$
+sub pick_layer {^M$
+^M$
+    print "<H3>Depth DB<HR></H3>"                     ;^M$
+    print "<H4> Drill Down </H4>"                     ;^M$
+    $db_choice = ${$query -> {db_choice}}[0] ;^M$
+    if ( $db_choice ne '' ) { ${$query -> {db}}[0] = $db_choice }^M$
+    $db = ${$query -> {db}}[0]                        ;^M$
+    $layer = ${$query -> {layer}}[0]                  ;^M$
+    $depth_str = $query -> param('depth_str')         ;^M$
+    $depth_str = "$depth_str $layer"                  ;^M$
+    $depth_str =~ s/^ +//                             ;^M$
+    @$depth_arr = split(/ +/, $depth_str)             ;^M$
+    $ob -> db($db)                                    ;^M$
+^M$
+    $layer_arr_str = $ob -> layer(@$depth_arr)        ;^M$
+    $layer_arr = eval $layer_arr_str                  ;^M$
+    @$layer_arr = sort @$layer_arr                    ;^M$
+^M$
+print $#$layer_arr,"lay arr\n" ;^M$
+print $#$depth_arr,"dep arr\n" ;^M$
+    if ( $#$layer_arr < 0 and $#$depth_arr < 0) { ^M$
+      print "<H4>No Data</H4>"                        ;^M$
+      print "<H3>Add First Layer</H4>"                        ;^M$
+      print $query->startform(-action=>"$script_name/depth",-TARGET=>"depth_canvas");^M$
+      print $query->hidden('depth_str')                    ;^M$
+      print $query->hidden('db', $db )                     ;^M$
+      print "<BR>Password"                                 ;^M$
+      print $query -> password_field(-name=>'secret')      ;^M$
+      print "<BR>".$query->submit(-name => 'New Top Level Data')     ;^M$
+      $hidden_struct -> {db} = $db                         ;^M$
+      $hidden_struct -> {depth_arr} = $depth_arr           ;^M$
+      $hidden_struct_str = $ob -> dump($hidden_struct)     ;^M$
+      $query -> param('hidden_struct', $hidden_struct_str) ;^M$
+      print $query -> hidden('hidden_struct')              ;^M$
+      ^M$
+      print $query->endform                                ;^M$
+    }^M$
+^M$
+    else {^M$
+^M$
+       print $query->startform(-action=>"$script_name/layer",-TARGET=>"depth_ctls");^M$
+       $query -> param('depth_str', $depth_str )         ;^M$
+       print $query->hidden('depth_str')                 ;^M$
+       print $query->hidden('db', $db )                  ;^M$
+       print $query->radio_group(^M$
+                               -name      => 'layer',^M$
+                               -Values    =>  $layer_arr,^M$
+                               -linebreak => 'yes' ,^M$
+                              );^M$
+       print " ".$query->submit(-name => 'DRILL DOWN')         ;^M$
+       print $query->endform                                   ;^M$
+       $out_depth_str = $depth_str." "                         ;^M$
+       if ( $out_depth_str !~ /^ *$/ ) {^M$
+          $out_depth_str =~ s/ +/-><BR>/g                      ;^M$
+          $out_depth_str = "$out_depth_str <BR>"               ;^M$
+          print "<HR><H4>Data Structures<\H4>"                 ;^M$
+          print $out_depth_str                                 ;^M$
+          print $query->startform(-action=>"$script_name/depth",-TARGET=>"depth_canvas");^M$
+          print $query->hidden('depth_str')                    ;^M$
+          print $query->hidden('db', $db )                     ;^M$
+          print "<BR>Password"                                 ;^M$
+          print $query -> password_field(-name=>'secret')      ;^M$
+          print "<BR>".$query->submit(-name => 'DEPTH')        ;^M$
+          print $query->endform                                ;^M$
+          $hidden_struct -> {db} = $db                         ;^M$
+          $hidden_struct -> {depth_arr} = $depth_arr           ;^M$
+          $hidden_struct_str = $ob -> dump($hidden_struct)     ;^M$
+          $query -> param('hidden_struct', $hidden_struct_str) ;^M$
+          print $query->startform(-action=>"$script_name/search",-TARGET=>"depth_canvas");^M$
+          print $query -> hidden('hidden_struct')              ;^M$
+          print " ".$query->submit(-name => 'SEARCH')          ;^M$
+          print $query->endform                                ;^M$
+       }^M$
+    }^M$
+^M$
+print $#$depth_arr,"dep arr\n" ;^M$
+    if (  $#$depth_arr < 0 ) {^M$
+    print $query->startform(-action=>"$script_name/depth",-TARGET=>"depth_canvas");^M$
+    print $query->hidden('depth_str')                    ;^M$
+    print $query->hidden('db', $db )                     ;^M$
+    print "<BR>Password"                                 ;^M$
+    print $query -> password_field(-name=>'secret')      ;^M$
+    print "<BR>".$query->submit(-name => 'New Freeze File')     ;^M$
+    $hidden_struct -> {db} = $db                         ;^M$
+    $hidden_struct -> {depth_arr} = $depth_arr           ;^M$
+    $hidden_struct_str = $ob -> dump($hidden_struct)     ;^M$
+    $query -> param('hidden_struct', $hidden_struct_str) ;^M$
+    print $query -> hidden('hidden_struct')              ;^M$
+    print $query->endform                                ;^M$
+^M$
+    }^M$
+ ^M$
+^M$
+^M$
+    &xit^M$
+}^M$
+^M$
+sub depth {^M$
+^M$
+      $hidden_struct_str = $query -> param('hidden_struct') ;^M$
+      if ( $hidden_struct_str ne '' ) {^M$
+        print " HDN ST" ;^M$
+        $hidden_struct = eval $hidden_struct_str        ;^M$
+        $db = $hidden_struct  -> {db}                   ;^M$
+        @$depth_arr = @{$hidden_struct  -> {depth_arr}} ;^M$
+        $depth_str = join(' ', @$depth_arr )            ;^M$
+      }^M$
+      else { ^M$
+        $db = $query->param('db')                       ;^M$
+        $depth_str = $query -> param('depth_str')       ;^M$
+        @$depth_arr = split (/ +/, $depth_str )           ;^M$
+      }^M$
+      @{$ob -> {'depth_arr'}} = @$depth_arr             ;^M$
+      $depth_arr_len = @$depth_arr                      ;^M$
+      $ob -> db($db)                                    ;^M$
+      $ob -> {out_depth_str} = $depth_str               ;^M$
+      $ob -> {db} = $db                                 ;^M$
+      $ob -> {'click_depth'} = 'yes'                    ;^M$
+      $out_depth_str = $depth_str                       ;^M$
+      $out_depth_str =~ s/ +/-> /g                      ;^M$
+      print "<H2>$out_depth_str -></H2><BR>"            ;^M$
+^M$
+      if ($query->param('secret') eq 'password'){ ^M$
+         $ob -> {upd} = 'yes'                           ;^M$
+      }^M$
+^M$
+      print "</H3>"                                     ;^M$
+      $ob -> {url_path} = ^M$
+                       $query->url(-absolute=>1, -path_info=>1, -query=>1);^M$
+      $arr_str = $ob -> depth(@$depth_arr)              ;^M$
+      $tmp_arr = eval $arr_str                          ;^M$
+      print  $#$depth_arr,"dep arr" ;^M$
+      if ( $#$depth_arr == -1 and $ob -> {upd} == 'yes') ^M$
+      { ^M$
+      print ^M$
+            "<table><td><FORM METHOD=\"POST\" ACTION=\"/cgi-bin/depth/upd\" ENCTYPE=\"application/x-www-form-urlencoded\" TARGET=\"depth_canvas\"><TEXTAREA NAME=\"upd $db $depth_str \" ROWS=\"4\" ></TEXTAREA>^M$
+             </td><td>^M$
+             <INPUT TYPE=\"submit\" VALUE=\"New top object\" NAME=\"upd_chkbx\" ></FORM>^M$
+             </td></table>^M$
+" ;^M$
+      }^M$
+^M$
+      if ( $#$depth_arr == 0 and $ob -> {upd} == 'yes') {^M$
+^M$
+      $depth_str = $$depth_arr[0] ;^M$
+      print ^M$
+            "<table><td><FORM METHOD=\"POST\" ACTION=\"/cgi-bin/depth/upd\" ENCTYPE=\"application/x-www-form-urlencoded\" TARGET=\"depth_canvas\"><TEXTAREA NAME=\"upd $db $depth_str \" ROWS=\"4\" ></TEXTAREA>^M$
+^M$
+             </td><td>^M$
+             <INPUT TYPE=\"submit\" VALUE=\"Top Data Layer\" NAME=\"upd_chkbx\" ></FORM>^M$
+             </td></table>"^M$
+      }^M$
+^M$
+^M$
+      $ob -> {assc_arr} = $tmp_arr                    ;^M$
+      $ob -> set_header(@$depth_arr)                  ;^M$
+      print $ob -> mk_table                           ;^M$
+^M$
+&dump_query ;^M$
+&xit^M$
+}^M$
+^M$
+sub upd {^M$
+^M$
+   print $query -> param('hidden_struct')                 ;^M$
+   $upd_cmd = @{$query -> {'.parameters'}}[0]             ;^M$
+   $upd_val = $query -> param($upd_cmd)                   ;^M$
+^M$
+   @$upd_val = split("\n", $upd_val)                      ;^M$
+   my @depth_arr = split(/ +/, $upd_cmd)                  ;^M$
+   shift @depth_arr                                       ;^M$
+   $db = shift @depth_arr                                 ;^M$
+   #print "<PRE>",$upd_val," </PRE> upd val"                ;^M$
+ ^M$
+   if ( @{$query -> {upd_chkbx}}[0] eq 'new_ob' ) ^M$
+     { push @depth_arr, $upd_val                          ;^M$
+       $upd_val = undef                                   ;^M$
+     }^M$
+^M$
+   elsif ( @{$query -> {upd_chkbx}}[0] eq 'new_last_ob' ) ^M$
+     { ^M$
+       pop @depth_arr                                     ;^M$
+       push @depth_arr, $upd_val                          ;^M$
+       $upd_val = undef                                   ;^M$
+     }^M$
+^M$
+   elsif ( @{$query -> {upd_chkbx}}[0] eq 'new_ext_last_ob' )^M$
+     { ^M$
+       push @depth_arr, $upd_val                          ;^M$
+       $upd_val = undef                                   ;^M$
+     }^M$
+   elsif ( @{$query -> {upd_chkbx}}[0] eq 'New top object' )^M$
+     {^M$
+       push @depth_arr, $upd_val                          ;^M$
+       $upd_val = undef                                   ;^M$
+     }^M$
+   elsif ( @{$query -> {upd_chkbx}}[0] eq 'Top Data Layer' )^M$
+     {^M$
+       push @depth_arr, $upd_val                          ;^M$
+       $upd_val = undef                                   ;^M$
+     }^M$
+ ^M$
+^M$
+   #$upd_val = $ob -> arr2str(@$upd_val)                   ;^M$
+   print "<PRE> $upd_val </PRE>"                          ;^M$
+   #print " -$upd_val- xxx upd val pre"                          ;^M$
+   @upd_arr = ( @depth_arr, $upd_val )                    ;^M$
+   print $ob -> db($db)                                         ;^M$
+   print "<pre>====",join ('--', @upd_arr), "====join\n</pre>" ;^M$
+   $ob -> write ;^M$
+   print $ob -> upd(@upd_arr)                           ;^M$
+   pop @upd_arr                                           ;^M$
+   #print "<pre> xxx ";^M$
+   #print $ob -> depth(@upd_arr)                           ;^M$
+   #print "xxx </pre>" ;^M$
+   $hidden_struct -> {db} = $db                           ;^M$
+   @{$hidden_struct -> {depth_arr}} = @depth_arr          ;^M$
+   $hidden_struct_str = $ob -> dump($hidden_struct)       ;^M$
+   $query -> param('hidden_struct', $hidden_struct_str)   ;^M$
+   #print $query -> hidden('hidden_struct')                ;^M$
+   &depth                                                 ;^M$
+^M$
+}^M$
+^M$
+sub del {^M$
+^M$
+   $del_cmd = @{$query -> {'.parameters'}}[0]             ;^M$
+   my @depth_arr = split(/ +/, $del_cmd)                  ;^M$
+   shift @depth_arr                                       ;^M$
+   pop @depth_arr                                         ;^M$
+   $db = shift @depth_arr                                 ;^M$
+   print "<PRE>",$del_val,"</PRE> del val"               ;^M$
+^M$
+   #$del_val = $ob -> arr2str(@$del_val)                  ;^M$
+   #print "<PRE> $del_val </PRE>"                         ;^M$
+   #print $del_val," del val pre"                         ;^M$
+   #@upd_arr = ( @depth_arr, $del_val )                   ;^M$
+   @del_arr = ( @depth_arr )                    ;^M$
+   $ob -> db($db)                                         ;^M$
+   $ob -> write                                           ;^M$
+   $out =  $ob -> del(@del_arr)                           ;^M$
+   $hidden_struct -> {db} = $db                           ;^M$
+   @{$hidden_struct -> {depth_arr}} = @depth_arr          ;^M$
+   $hidden_struct_str = $ob -> dump($hidden_struct)       ;^M$
+   $query -> param('hidden_struct', $hidden_struct_str)   ;^M$
+   #print $query -> hidden('hidden_struct')                ;^M$
+   &depth                                                 ;^M$
+^M$
+}^M$
+^M$
+^M$
+^M$
+sub search {^M$
+^M$
+   $hidden_struct_str = $query -> param('hidden_struct')  ;^M$
+   $hidden_struct = eval $hidden_struct_str               ;^M$
+   $db = $hidden_struct  -> {db}                          ;^M$
+   @$depth_arr = @{$hidden_struct  -> {depth_arr}}        ;^M$
+   $depth_str = join(' ', @$depth_arr )                   ;^M$
+   $pr_depth_str = join('->', @$depth_arr ).'->'          ;^M$
+   $ob -> {out_depth_str} = $depth_str                    ;^M$
+   $ob -> {db} = $db                                      ;^M$
+   $ob -> db($db)                                         ;^M$
+   $ob -> set_header(@$depth_arr)                         ;^M$
+   $head_arr_num =  $ob -> {header_arr_num}               ;^M$
+   $hidden_struct -> {header_arr_num} = $head_arr_num     ;^M$
+   $hidden_struct_str = $ob -> dump($hidden_struct)       ;^M$
+   $query -> param('hidden_struct', $hidden_struct_str)   ;^M$
+   print $query->startform(-action=>"$script_name/search_depth",-TARGET=>"depth_canvas");^M$
+   print "<H3>$pr_depth_str</H3>"                         ;^M$
+   foreach $num ( 0..$head_arr_num - 1 ) {^M$
+     $arr_str =  $query->textfield("arr_str.$num")       ;^M$
+     push @$form_arr, $arr_str                            ;^M$
+   }^M$
+   push(@{$ob -> {arr_stack}}, $form_arr)                 ;^M$
+   print $ob -> mk_table                                  ;^M$
+   print " ".$query->submit(-name => 'SEARCH DEPTH' )      ;^M$
+   print $query -> hidden('hidden_struct')              ;^M$
+   print $query->endform                                  ;^M$
+^M$
+&xit ;^M$
+}^M$
+^M$
+sub search_depth {^M$
+^M$
+   $hidden_struct_str = $query -> param('hidden_struct')  ;^M$
+   $hidden_struct = eval $hidden_struct_str               ;^M$
+   $db = $hidden_struct  -> {db}                          ;^M$
+   @$depth_arr = @{$hidden_struct  -> {depth_arr}}        ;^M$
+   $depth_str = join(' ', @$depth_arr )                   ;^M$
+   $pr_depth_str = join('->', @$depth_arr ).'->'          ;^M$
+   print "<H3>$pr_depth_str</H3>"                         ;^M$
+   $ob -> {out_depth_str} = $depth_str                    ;^M$
+   $arr_num = $hidden_struct -> {header_arr_num}          ;^M$
+   foreach $num (0..$arr_num +1 ) {^M$
+    push @$search_arr, ${$query ->{"arr_str.$num"}}[0]    ;^M$
+   }^M$
+^M$
+   $ob -> db($db)                                         ;^M$
+   $assc_str = $ob -> depth(@$depth_arr)                  ;^M$
+   $ob -> {assc_arr} = eval $assc_str                     ;^M$
+   $ob -> search(@$search_arr)                            ;^M$
+^M$
+&dump_query ;^M$
+&xit ;^M$
+}                    ^M$
+^M$
+sub new_fz {^M$
+^M$
+print "hello\n" ;^M$
+   $hidden_struct_str = $query -> param('hidden_struct') ;^M$
+   if ( $hidden_struct_str ne '' ) {^M$
+      $hidden_struct = eval $hidden_struct_str           ;^M$
+      $db = $hidden_struct  -> {db}                      ;^M$
+      @$depth_arr = @{$hidden_struct  -> {depth_arr}}    ;^M$
+      $depth_str = join(' ', @$depth_arr )               ;^M$
+   }^M$
+   else {^M$
+      $db = $query->param('db')                          ;^M$
+      $depth_str = $query -> param('depth_str')          ;^M$
+   }^M$
+&xit ;^M$
+^M$
+}^M$
+^M$
+^M$
+#################################################^M$
+### These should be in a module, but...       ###^M$
+#################################################^M$
+^M$
+sub dump_query {^M$
+    print $query -> path_info  ;^M$
+    $script_name = $query->script_name;^M$
+    print "<PRE>"              ;^M$
+    $ob -> fmt                 ;^M$
+    print $ob -> dump($query)  ;^M$
+    print "</PRE>"^M$
+}^M$
+^M$
+sub pr_canvas_gif {^M$
+    print "<table align=center valign=middle >";^M$
+    print "<td>^M$
+    <img  src=/images/sun_earth.gif height=\"250\" ^M$
+                              align=\"absmiddle\" width=\"450\">^M$
+     </td></table>";^M$
+&xit ^M$
+}^M$
+^M$
+sub xit {^M$
+#&dump_query ;^M$
+print $query->end_html;^M$
+$ob->DESTROY;^M$
+exit ;^M$
+}^M$

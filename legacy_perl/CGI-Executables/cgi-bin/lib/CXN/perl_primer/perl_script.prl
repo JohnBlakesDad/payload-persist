@@ -1,0 +1,133 @@
+#!/usr/bin/perl
+
+=head1 Associative Arrays and Hashes in a script with functions (called subs)
+
+=over 5
+
+Note: The above line starts interpreter languages such as perl and shell
+
+Now that you have seen scalars and arrays in action, I will introduce you to
+hashes, sometimes known as associative arrays.
+
+A hash is an array of key and value pairs.  The most commonly seen hash in 
+linux is the enviromental variable list.  It constists of keys like USER and 
+DISPLAY.
+
+When you print then env command you get lines like:
+
+DISPLAY=111.333.222.333:0.0
+USER=John_van_Vlaanderen
+
+DISPLAY and USER are keys, the values are my name and the ip address/display 
+number.
+
+A hash starts with a "%" sign and is similar to arrays in some respects:
+
+=head1  Perldoc
+
+The odd marks above (=head1) are the perldoc format.
+Type perldoc <perlscipt> and the comments will get formatted using this syntax
+
+=cut
+
+%my_hash = ( 'a', 1, 'b', 2, 'c', 3, 'd' , 0, 'e', 0) ;
+
+# Here the keys are a, b, d and d and the values are 1 2 3 1
+# The letters should have single or double quotes around them.  
+# A double quote allows variables to show their contents, 
+# a single quote will print the string including the '$'.
+# A backtic actually sends a call out to the system and will fill up
+# an array with the lines returned by the call. The next script shows that.
+# The operator "keys" is used below:
+
+@keys_arr = keys %my_hash ;
+
+# I will also introduce you to the "if", "elsif" and "else" operators 
+  
+$last_value = 0 ;
+
+foreach $key (@keys_arr) {
+
+   $value = $my_hash{ $key } ;
+
+   print "key: ".$key.", value: ".$value."\n" ;
+
+   if ( $value > $last_value ) { 
+      print "this value is greater than the prevous value in the hash\n" 
+   }
+   elsif ( $value == $last_value ) { 
+      print "this value EQUALS the last\n"
+   }
+   else { 
+      print "this value is NOT greater than the last\n"
+   }
+
+   $last_value = $value 
+}
+
+=head1 Comments on blocks 
+
+=over5
+
+This "if/else" statement has two statement blocks in it, each surrounded by 
+curly braces.  Since a semicolon ends a statement, one placed after the "if" 
+statement would have isolated the "else" statement from it, causing a "compile"
+error.
+
+Also, you dont have to use a semicolon on the last or only line in a block or 
+the last line in a script.
+
+Just to round things out, I want to show you how a function (sub) works.
+
+=cut
+
+
+sub key_val_demo {
+    my @arr = @_    ; # "@_" is the array "in play" and I fill the array 
+                      # "@arr" with its contents.
+                      # "my" is very important because it keeps values within
+                      # the scope of a curly braced block, in this case a sub. 
+
+    my %hash = @arr ; # As I said, perl has nice tricks, you can convert an
+                      # array into a hash this simply, but the array has to be
+                      # formatted in key value pairs  
+
+    my @keys = keys %hash ; my @vals = values %hash ;
+                      # keys and values are built in functions 
+    my $keys_string = join (' ', @keys ) ;
+    my $vals_string = join (' ', @vals ) ;
+    my $out_string = "From the sub:\n"   ;
+    $out_string .= "\n keys: $keys_string \n values: $vals_string\n" ;
+       # the "\n" is perl for a newline and the ".=" joins the contents of 
+       # the "$out_string" with the string after it
+    return $out_string ;
+       # this sends the string back out without printing it, 
+       # you will see how it works in a moment 
+       
+}
+
+$print_out = &key_val_demo( 'a', 1, 'b', 2 , 'c', 3) ;
+       # I could have set the a, 1, b, 2... arguments to be an array or even 
+       # hash,  &keys(@arr), or &keys(%hash), perl is very flexible
+       # If a sub is called after it is declared in script the "&" can
+       # be elminated
+
+print $print_out ;
+       #this is what was returned from the function, errr, sub.
+
+=head1 End Comments
+
+=over5
+
+The vast majority of scripts out there are no more complicated than this 
+because perl is primarily a systems language which grew up along with the rest 
+of the computing world.  Part of our philosophy is that "what works for you, 
+works for us."  
+ 
+We truly hope you like the style of programming and are eager for the object 
+oriented stuff in the next example. 
+
+=cut
+
+  #Copyright CXN, Inc., 2000, please email john@thinman.com for copy permission
+

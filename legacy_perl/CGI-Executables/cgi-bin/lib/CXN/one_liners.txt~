@@ -1,0 +1,100 @@
+
+
+
+Perl can be a command line tool like awk or sed, it can be a simple scripting language like basic or shell and it can be an object oriented language with classes and packages like java.
+
+This is lesson book will introduce to all these different powers of perl, if you are not just reading this and I am talking to you, I will show you all of this in only an hour or two.  I have faith that you will be able to take these notes home and write for yourself some useful programs, maybe to help calculate your finances, as I do.
+
+Every little program here extends into the next more complicated one.  If at any point you get stumped, don't forget to shout out.  It is very important to me that you understand that the combined baby steps will give the same abilities I have by the time we reach the last example.
+
+
+Command Line Perl:
+
+#  perl -ne ' print "hello world\n"'
+hello world
+#
+
+This simple line is just like shell except that you have to add a newline character.  The single tics keep inside statements safe from command line interpretation.
+
+#  echo hello | perl -ne 's/hello/goodbye/ ; print'
+goodbye
+#
+
+This one-liner shows sed's pattern matching and substitution.
+
+# echo "ZxxxxZ
+XxxxxX " | perl -ne  '/^Z.*Z$/ && print '
+ZxxxxZ
+
+A slightly more complicated match, any line that starts and ends with "Z",  give the boolean "yes" to the print operator to print the line.
+
+This can also be written as 
+# echo "ZxxxxZ
+XxxxxX " | perl -ne  '/^Z.*Z$/ && print $_ ' 
+#yields
+ZxxxxZ
+
+$_ is one of many special variables.  I refer to this one as the "scalar in play."  A scalar is a line of alpha numeric and symbol text.
+
+A scalar is always preceeded by a "$."
+
+# echo "XXXX"
+xxxx " | perl -ne  's/x/y/gi && print $_ ' 
+#yields
+yyyy
+yyyy
+
+The pattern matches for an x and substitutes it for a y.  The "s" before the slashse means substitute and the "g" after the slashes and before the "&&" says "do it globally, meaning get them all (not just the fisrt one) and the "i" after it means ignore upper or lower case.
+
+These matches are called regular expressions and perl is often embedded in other languages because it is very rich in these features.
+
+Besides the scalar there are two other "types" that we need to know about and those are arrays and hashes.
+
+An array is a list of scalars and is preceeded by the @ sign.
+
+The following one-liner is several lines long but it shows how to use an array.
+
+The # symbol denotes a comment, anything after that is ignored until the next line.  Every statement in ends with a ";" and lines not ending with it continue to the next line.
+
+# echo "
+123
+456
+789
+" | perl -ne ' while (<STDIN>) {    chomp ;  
+                                      # a special operator which removes
+                                      # newlines from the "scalar in play" 
+                                    push ( @my_arr, $_ ) 
+                                      # Adds $_ to the end of the array
+                               }    
+                                 # "Blocks" begin and end with curly braces
+                                 # not done yet !!
+
+               foreach $num ( @my_arr ) {
+                        $sum = $sum + $num ;
+                        $cnt++ 
+                                        }
+               print "Sum is:".$sum."  Number of numbers: ".$cnt."\n" ;
+ 
+               $string1 = "Average is: "
+               $string2 = $sum/$cnt."\n"              ;
+               print "$string1 $string2"              ;
+
+                       # Now we are done, note that you can even do math on a print line.
+                       # dots connect things togther into a single scalar
+                       # Now we end with the single tic that we started with 
+               '
+
+
+#Sum is:1368  Number of numbers: 4
+Average is:  342 
+
+This is a far as I dare go with a "one-liner."  It shows that perl is easy to use for little things.
+
+
+
+  Copyright CXN, Inc., 2000, please email john@thinman.com for copy permission
+  
+
+
+
+  

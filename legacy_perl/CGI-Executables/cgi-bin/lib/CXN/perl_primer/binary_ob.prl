@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+use CXN::PersistBIN ;
+
+$data ->[0] = 'a' ;
+
+sub say { $word = shift; print $word."\n" } 
+
+# Here is a funtion (sub) called "say" and then I put it into the structure
+
+$data ->[1] = \&say    ;
+$say = \&say    ;
+
+$say -> ('hello') ;
+
+&{$data->[1]}('hello') ;
+
+$data->[1]->('goodbye')  ;
+
+$ob = new CXN::PersistBIN ;
+
+$fzfil="bintst.fz"     ;
+
+$ob -> freeze ( $data , $fzfil ) ;
+
+$struct = $ob -> thaw ( $fzfil ) ;
+
+use PersistOB ;
+$pob = new CXN::PersistOB ;
+
+print $pob -> serialize ( $struct ) ;

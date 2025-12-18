@@ -1,0 +1,12 @@
+#!/usr/bin/perl
+
+use strict ;
+
+my @in = (<>) ;
+
+my $in = join ( "\n", @in ) ;
+
+print $in ;
+
+$in =~ /^\s*$/ && print "white space\n" ;
+

@@ -1,0 +1,6 @@
+#!/perl/bin/perl
+
+print "hello";
+
+open ( FS, "free_indexes.ls" ) ;
+while (<FS>) { print } ;

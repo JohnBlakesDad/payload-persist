@@ -1,0 +1,21 @@
+inds=" 
+SWCGX
+SWHGX
+SWPIX
+SWPPX
+SWBDX
+SWITX
+SWSSX
+SWLBX
+SWTIX
+SWTSX
+SWYPX
+SWYSX
+"
+
+for i in $inds
+do
+
+echo "<img src=\"http://chart.bigcharts.com/bc3/intchart/frames/chart.asp?symb=$i&compidx=SP500%3A3377&comp=DJIA&ma=0&maval=9&uf=0&lf=1&lf2=0&lf3=0&type=2&size=2&state=13&sid=18167&style=320&time=5&freq=1&nosettings=1&rand=246\">"
+
+done

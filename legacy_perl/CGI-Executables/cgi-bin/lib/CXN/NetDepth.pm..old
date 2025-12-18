@@ -1,0 +1,489 @@
+package NetDepth;
+
+use Cxn ;
+use Table ;
+use Basic;
+use URI::Escape ;
+
+#use Cxn ;
+#use Table ;
+#use Authen::Challenge::Basic;
+#use URI::Escape ;
+
+sub new {
+    my $self = {}                                        ;
+    my $class = shift                                    ;
+    $self -> {db_name} = shift                           ;
+    $self -> {mach} = shift                              ;
+    $self -> {cxn} = new Cxn                            ;
+    $self -> {cxn} -> connect                           ;
+    #change below to suit opt db
+    my $db = $self -> {db_name}                          ;
+    #$self -> {table_title} = 'yes' ; 
+    bless ($self, $class)                                ;
+    return ( $self )
+}
+
+sub connect {
+    my $self = shift                         ;
+    $self -> {cxn} = new Cxn                            ;
+    $self -> {cxn} -> connect                           ;
+}
+
+sub send_recv {
+    my $self = shift                         ;
+    my $send_str = shift                     ;
+    $self -> {cxn} -> send("$send_str")      ;
+    return $self -> {cxn} -> recv()          ;
+}
+
+sub db {
+    my $self = shift                         ;
+    $self -> connect                         ;
+    if ( my $type = shift ) {
+    return $self -> send_recv("db $type")    ;
+    }
+    else {
+    return $self -> send_recv("db")
+    } 
+}
+
+sub layer {
+    my $self = shift                         ;
+    my $send_str                             ;
+    $send_str = join('\',\'', @_)           ;
+    $send_str = "\'".$send_str."\'"          ;
+    return $self -> send_recv("layer $send_str"); 
+}
+
+sub depth {
+    my $self = shift                         ;
+    my $send_str                             ;
+    $send_str = join('\',\'', @_)           ;
+    $send_str = "\'".$send_str."\'"          ;
+    return $self -> send_recv("depth $send_str");
+}
+
+sub upd {
+    my $self = shift                           ;
+    my $client                                 ;
+    #$client = Authen::Challenge::Basic->new ('Secret' => 'known2us',
+    $client = Basic->new ('Secret' => 'known2us',
+                                                'Timeout' => 90,
+                                                'Sync' => '' 
+                                             ) ;
+    my $send_str                               ;
+    my $last_elem ;
+    $last_elem = $_[$#_]                       ;
+    
+    $send_str = join('\',\'', @_)              ; 
+    $send_str = "\'".$send_str."\'"            ;
+    $send_str =~ s/\n/<BR>/                    ;
+    my $rand_str                               ;
+    $rand_str = $self -> send_recv('upd auth') ;
+    my $resp                                   ;
+    $resp = $client ->Response($rand_str)      ;
+    chomp $resp                                ;
+    $client = ''                               ;
+    return $self -> send_recv("upd $resp $send_str") ;
+}
+
+sub del {
+    my $self = shift                           ;
+    my $client                                 ;
+    #$client = Authen::Challenge::Basic->new ('Secret' => 'known2us',
+    $client = Basic->new ('Secret' => 'known2us',
+                                                'Timeout' => 10,
+                                                'Sync' => ''
+                                             ) ;
+    my $send_str                               ;
+    my $last_elem ;
+    $last_elem = $_[$#_]                       ;
+
+    $send_str = join('\',\'', @_)              ;
+    $send_str = "\'".$send_str."\'"            ;
+    $send_str =~ s/\n/<BR>/                    ;
+    my $rand_str                               ;
+    $rand_str = $self -> send_recv('del auth') ;
+    my $resp                                   ;
+    $resp = $client ->Response($rand_str)      ;
+    chomp $resp                                ;
+    $client = ''                               ;
+    return $self -> send_recv("del $resp $send_str") ;
+}
+
+sub get_assc_arr {
+    my $self = shift                       ;
+    #$self -> {decend_title} = $_[$#_]      ;
+    my $mach = $self -> {mach}             ;
+    my $arr_cnt                            ;
+    my $string                             ;
+    $string = $self -> depth(@_)           ;
+    my $assc_arr = eval $string            ;
+    $self -> {assc_arr}{$_[$#_]} = $assc_arr        ;
+    return $assc_arr 
+}
+
+sub set_header {
+    my $self = shift                       ;
+    my $depth_val = $_[0]           ;
+    my $header_arr_str = $self ->depth('admin',$depth_val) ;
+    my $header_arr = eval $header_arr_str  ;
+    my $arr_num = $#_ + 1    ;
+    $self -> {header_arr_num} = $arr_num   ;
+    foreach (1..$arr_num )
+    { shift @$header_arr }
+    $header_arr_num = @$header_arr         ;
+    $self -> {header_arr_num} = $header_arr_num ;
+    $blank_arr = []                             ;
+    push(@{$self -> {arr_stack}}, $header_arr)  ;
+    push(@{$self -> {arr_stack}}, $blank_arr)   ;
+}
+
+sub mk_table {
+    my $self = shift                       ;
+    my $assc_arr = $self -> {assc_arr}     ;
+    my $arr_stack = []                     ;
+    my @areas = @_                         ;
+    my $num = @areas                       ;
+    push(@{$self -> {tmparr}}, $self -> {decend_title}  ) 
+                if $self -> {table_title} eq 'yes' ; 
+    if ( ref $assc_arr eq 'HASH' ) { $self -> decend($assc_arr) }
+    elsif ( ref $assc_arr eq 'ARRAY' ) { 
+      my $str = join('<BR>', @$assc_arr )                  ;
+      push(@{$self -> {arr_stack}}, [ $str ]) 
+    }                                                      
+    else {  push(@{$self -> {arr_stack}}, [ $assc_arr ]) } ;
+    $self -> fmt_arr ;
+   
+    my $table = new Table;
+    $table->{content} = [ {contentstyle->['font color=white','i'],
+                        style=>'bgcolor=blue',
+                        content=>['Name','Phone Number']
+                        }
+                        ]                                   ;
+    #print $self -> dump($self -> {out_stack})               ;
+    push (@{$table->{content}}, @{$self -> {out_stack}})    ;
+    $ret = $table->generate()                               ;
+    $table = ''                                             ;
+    return $ret 
+  
+}
+
+sub generate_table {
+
+    my $self = shift                                         ;
+    $self -> fmt_arr                                         ;
+
+    my $table = new Table;
+    $table->{content} = [ {contentstyle->['font color=white','i'],
+                        style=>'bgcolor=blue',
+                        content=>['Name','Phone Number']
+                        }
+                        ]                                     ;
+    #push (@{$table->{content}}, @{$self -> {out_stack}})      ;
+    push (@{$table->{content}}, @{$self -> {arr_stack}})      ;
+    $ret = $table->generate()                                 ;
+    $table = ''                                               ;
+    return $ret
+}
+
+
+sub decend {
+  my $self = shift                                                ;
+  my $struct = shift                                              ;
+  foreach $key ( sort keys %{$struct} ) { 
+    $ref_thing = ref $struct -> {$key}                            ;
+    $depth_str = ' '.join(' ', @{$self -> {tmparr}})              ;
+    if ( $ref_thing =~ /HASH/ ) {
+      push(@{$self -> {tmparr}}, $key)                            ;
+      my $cell_str                                                ;
+      if ( $self->{'click_depth'} eq 'yes' ) {
+        my $adon_dep_str = ' '.join(' ', @{$self -> {tmparr}})    ;
+        my $depth_str = $self -> {out_depth_str}." $depth_str $key";
+        my $db = $self -> {db}                                    ;
+        $adon_dep_str = uri_escape($adon_dep_str)                 ;
+        my $url_path = $self -> {url_path}                        ;
+        $url_path =~ s/(^.*\?depth_str=[^\&]*)(\&.*$)/$1$adon_dep_str$2/;
+        $cell_str = "<a href=$url_path>$key</a>"                  ;
+        #print $depth_str." depstr <BR>"                   ;
+        $new_ob_depth_str = $depth_str                               ;
+        @new_ob_depth_arr = split(/ +/, $new_ob_depth_str)           ;
+        pop @new_ob_depth_arr                                         ;
+        #push (@new_ob_depth_arr, $key)                                  ;
+        $new_ob_depth_str = join (' ', @new_ob_depth_arr)               ; 
+        #print $new_ob_depth_str." new ob depstr <BR>"                   ;
+        if ( $self -> {upd} eq 'yes' ) {
+          $multi_line =
+            "<FORM METHOD=\"POST\" ACTION=\"/cgi-bin/depth/upd\" ENCTYPE=\"application/x-www-form-urlencoded\" TARGET=\"depth_canvas\">"           ;
+          $multi_line
+            .= "<BR><TEXTAREA NAME=\"upd $db $new_ob_depth_str \" ROWS=\"5\" >$key</TEXTAREA><BR><INPUT TYPE=\"submit\" VALUE=\"new_ob\" NAME=\"upd_chkbx\" ></FORM>" ;
+          $cell_str .= $multi_line ;
+        }
+      }
+      else { $cell_str = $key }                                   ;
+      push(@{$self -> {pr_tmparr}}, $cell_str)                    ;
+      $self -> decend($struct -> {$key})                          ;
+    }
+    else {
+     my @pr_arr = @{$self -> {pr_tmparr}}                         ;
+     if ( $self->{'click_depth'} eq 'yes' ) {
+      my $adon_dep_str = ' '.join(' ', @{$self -> {tmparr}})." $key"   ;
+      $adon_dep_str = uri_escape($adon_dep_str)                        ;
+      my $url_path = $self -> {url_path}                               ;
+      my $db = $self -> {db}                                           ;
+      my $depth_str = $self -> {out_depth_str}." $depth_str $key";
+      $url_path =~ s/(^.*\?depth_str=[^\&]*)(\&.*$)/$1$adon_dep_str$2/ ;
+      $cell_str = "<a href=$url_path>$key</a>"                    ;
+
+      if ( $self -> {upd} eq 'yes' ) {
+        $cell_str .= 
+       "<FORM METHOD=\"POST\" ACTION=\"/cgi-bin/depth/del\" ENCTYPE=\"application/x-www-form-urlencoded\" TARGET=\"depth_canvas\"><BR><INPUT TYPE=\"image\" SRC=\"/images/delete.gif\" NAME=\"del $db $depth_str null\"></FORM>";
+         $multi_line =
+            "<FORM METHOD=\"POST\" ACTION=\"/cgi-bin/depth/upd\" ENCTYPE=\"application/x-www-form-urlencoded\" TARGET=\"depth_canvas\">"           ;
+         $multi_line
+            .= "<TEXTAREA NAME=\"upd $db $depth_str \" ROWS=\"5\" >$key</TEXTAREA><BR>New_Object<input TYPE=\"radio\" VALUE=\"new_last_ob\" NAME=\"upd_chkbx\" ><BR>Extend_Object<input TYPE=\"radio\" VALUE=\"new_ext_last_ob\" NAME=\"upd_chkbx\"><BR><INPUT TYPE=\"submit\" VALUE=\"Update\"></FORM>" ;
+         $cell_str .= $multi_line ;
+      }
+     }
+     else { $cell_str = $key }                                    ;
+     push(@pr_arr, $cell_str)                                     ;
+     if ( $self -> {upd} ne 'yes' ) {
+      if ( ref $struct -> {$key} eq 'ARRAY' ) {
+        $struct -> {$key} = join("<BR>", @{$struct -> {$key}}) 
+      }
+     push(@pr_arr, $struct -> {$key}) 
+     }
+     else {  
+       my $cell_str                                               ;
+       my $depth_str = $self -> {out_depth_str}." $depth_str $key";
+       my $db = $self -> {db}                                     ;
+       if ( ref $struct -> {$key} eq 'ARRAY' ) {
+        $pr_key = join ("\n",  @{$struct -> {$key}})           ;            
+       }
+       else { $pr_key = $struct -> {$key} }
+          $multi_line = 
+            "<FORM METHOD=\"POST\" ACTION=\"/cgi-bin/depth/upd\" ENCTYPE=\"application/x-www-form-urlencoded\" TARGET=\"depth_canvas\">"           ;
+          $multi_line  
+          .= "<TEXTAREA NAME=\"upd $db $depth_str\" ROWS=\"5\" >$pr_key</TEXTAREA><BR><INPUT TYPE=\"submit\" VALUE=\"Update\"></FORM>"                             ;
+          $cell_str =  $multi_line ;
+       push(@pr_arr, $cell_str)                                   ;
+     }
+     push(@{$self -> {arr_stack}}, \@pr_arr)
+    }
+  }
+  pop(@{$self -> {tmparr}})                                       ;
+  pop(@{$self -> {pr_tmparr}})                                    ;
+} #decend
+
+sub fmt {
+    my $self = shift                                      ;
+    $self -> {fmt} = 'yes'
+}
+
+sub dump_name {
+    my $self = shift                                      ;
+    $self -> {dump_name} = shift                          ;
+} 
+
+sub dump {
+    my $self = shift                                      ;
+    my $thing = shift ;
+    #my $thing = $self -> {"$thing"}                      ;
+    use Data::Dumper                                      ;
+    my $dump_str1 = Data::Dumper->new([$thing])           ;
+    $dump_str1 ->Indent(0) if $self -> {fmt} ne 'yes'     ;
+    $dump_str1 ->Names([$self -> {dump_name}])
+                        if $self -> {dump_name} ne ''     ;
+    my $ret                                               ;
+    $ret = $dump_str1->Dumpxs                             ;
+    return $ret
+}
+
+sub fmt_arr {
+my $self = shift                                          ;
+@tmp = @{$self -> {'depth_arr'}}                          ;
+$depth_str_len = @tmp                                     ;
+$header_arr_num = $self -> {header_arr_num}               ;
+$blankout = 'no'                                          ;
+foreach $arr (@{$self -> {arr_stack}}) {
+   my @sav_arr = @$arr                                    ;
+   my $last_arr = $self -> {last_arr}                     ;
+   my $cnt = 0                                            ;
+   $arr_len = @$arr                                       ;
+   $arr_len--                                             ;
+   foreach (@$arr) {
+    #next if $arr_len == $cnt                             ;
+    if ( $last_arr -> [$cnt] eq $arr -> [$cnt] ) {
+     #$arr -> [$cnt] = undef                              ;
+     $arr -> [$cnt] = ''                                  ;
+    }
+    $cnt++                                                ;
+   }
+   @{$self -> {last_arr}} = @sav_arr                      ;
+   $arr_num = @$arr                                       ;
+   $spl_num = $header_arr_num  - $arr_num      ; 
+   #print "$header_arr_num $arr_num<BR>" ; 
+   if ( $header_arr_num > 0 ) {
+    if ( $spl_num < 0 ) {
+     splice(@$arr, $spl_num ) #if $header_arr_num => 0      ;
+    }
+   }
+   if ( grep(/\w/, @$arr) ) { 
+     push( @{$self -> {out_stack}}, $arr) }               ;
+   }
+}
+
+sub prep {
+   my $self = shift            ; 
+   my $str = shift             ;
+   $str = $self -> dump($str)  ;
+   $str =~ s/,/\\,/g           ;
+   $str =~ s/\'/\\'/g          ;
+   return $str
+}
+
+sub arr2str {
+   my $self = shift            ;
+   @$str = @_                  ;
+   $str = $self -> dump($str)  ;
+   $str =~ s/,/\\,/g           ;
+   $str =~ s/\'/\\'/g          ;
+   return $str
+}
+
+sub single_search {
+
+  my $self = shift                                            ;
+  my $srch_arr                                                ;
+  @$srch_arr = @_                                             ;
+  my $struct = $self -> {assc_arr}                            ;
+  $self -> search_descend($struct)                            ;
+   
+  $single_search_str = $self -> { 'single_search_str' }       ;
+  $single_search_str =~ s/([\+\?\.\*\$\(\)\[\]\\])/\\$1/g     ;
+ 
+  
+  @single_search_arr = split(/\n/, $single_search_str )       ;
+  
+  foreach $single_search_line ( @single_search_arr ) {
+  chop $single_search_line ;
+
+
+  @$and_arr = split(/\&/, $single_search_line )                ;
+
+  $self -> {'regex_struct'} = []                              ;
+  foreach $and_srch_str (@$and_arr) {
+    my $or_arr                                                ;
+    @$or_arr =  split(/\|/, $and_srch_str )                   ;
+    push ( @{$self -> {'regex_struct'}}, \@$or_arr )
+  }
+
+  ARR :
+  foreach $arr (@{$self -> {srch_arr_stack}}){ ### get array off stack
+    my $cnt                                                   ;
+    foreach $cell (@$arr) {
+      if ( ref $cell eq 'ARRAY' ) {
+        $cell = join('<BR>', @$cell)                          ;
+        $$arr[$cnt] = $cell                                   ;
+      }       
+      $cnt ++
+    }
+    my $flag = 'no'                                           ;
+    AND :
+    foreach $and ( @{$self -> {'regex_struct'}} ) {
+     foreach $or ( @$and ) {
+      $flag = 'no'                                            ;
+      $or =~ s/(^ *| *$)//g                                   ;
+      if ( grep (/$or/, @$arr ) ) {
+       $flag = 'yes'                                          ; 
+       next AND  
+      }
+      $flag = 'no'                                            ;
+     }
+     next ARR if $flag eq 'no'
+    }
+    push(@{$self-> {arr_stack}}, $arr)                        ;
+  }
+
+  }
+  print $self -> generate_table
+  
+}
+
+sub search {
+    my $self = shift                                         ;
+    my $srch_arr                                             ;
+    @$srch_arr = @_                                          ;  
+    my $struct = $self -> {assc_arr}                         ; 
+    $self -> search_descend($struct)                         ;
+    NEW_ARR :
+    foreach $arr (@{$self -> {srch_arr_stack}}){ ### get array off stack
+       @$out_arr = @$arr                                     ;
+       my $cnt                                               ;
+       foreach $regexp (@$srch_arr) {  ### foreach regexp string
+         my $str = shift @$arr                ; ### shift array
+         $ref_thing = ref $str                ; 
+         if ( ref $str ne 'ARRAY' ) {  
+           if ( $str !~ /$regexp/i ) { 
+             next NEW_ARR if $regexp ne ''    ;          
+           }         
+         }
+         else { 
+           if ( ! grep(/$regexp/i, @$str ) ) {
+             next NEW_ARR if $regexp ne ''
+           }
+           my $str =  join ( "<BR>", @$str )                    ;
+           $$out_arr[$#$out_arr] = $str                         ;
+         }
+      }    
+      $in = $self -> dump($out_arr)                             ;
+      $in = eval $in ;
+      my $cnt ; 
+      foreach $cell (@$in) {
+        $cell = join ( "<BR>", @$cell ) if ref $cell eq 'ARRAY' ; 
+        $$in[$cnt] = $cell ;
+        $cnt++
+      }
+     push(@{$self-> {arr_stack}}, $in)                          ;
+    } 
+    if ( $self-> {tmp_arr_stack} ) {
+     $self -> fmt                                               ;
+     foreach $arr ( @{$self-> {tmp_arr_stack}} ) {
+      my $cnt                                                   ;
+      foreach $cell (@$arr) {
+        $cell = join ( "<BR>", @$cell ) if ref $cell eq 'ARRAY' ;
+        $$arr[$cnt] = $cell                                     ;
+        $cnt++
+      }
+      push(@{$self-> {arr_stack}}, $arr)                        ;
+     }
+    }
+    print $self -> generate_table
+}
+
+sub search_descend {
+  my $self = shift                                           ;
+  my $struct = shift                                         ;
+  foreach $key ( sort keys %{$struct} ) 
+    { $ref_thing = ref $struct -> {$key}                     ;
+    if ( $ref_thing =~ /HASH/ ) {
+      push(@{$self -> {srch_tmparr}}, $key)                  ;
+      $self -> search_descend($struct -> {$key})             ;
+    }
+    else {
+     my @srch_arr = @{$self -> {srch_tmparr}}                ;
+     push(@srch_arr, $key)                                   ;
+     push(@srch_arr, $struct -> {$key})                      ;
+     push(@{$self -> {srch_arr_stack}}, \@srch_arr);
+    }
+  }
+      pop(@{$self -> {srch_tmparr}})                         ;
+} 
+
+sub DESTROY {
+    my $self = shift                                         ;
+    $self -> send_recv('exit')                               ;
+}
+
+1;

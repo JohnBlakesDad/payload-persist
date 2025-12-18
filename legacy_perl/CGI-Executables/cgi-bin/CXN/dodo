@@ -1,0 +1,14 @@
+#!/usr/bin/perl -w
+
+use strict ;
+
+use lib ("/home/httpd/cgi-bin/") ;
+
+use CXN::JavaScript              ;
+
+my $js = new CXN::JavaScript     ;
+
+print $js -> popup_fxn;
+
+print $js -> popup_href ('clickme','page.html',undef,'103',undef,'yes') ;
+

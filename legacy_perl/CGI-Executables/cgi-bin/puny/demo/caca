@@ -1,0 +1,33 @@
+#!/usr/bin/perl
+
+while (<STDIN>) {    chomp ;  
+                                      # a special operator which removes
+                                      # newlines from the "scalar in play" 
+                                    push ( @my_arr, $_ ) 
+                                      # Adds $_ to the end of the array
+                               }    
+                                 # "Blocks" begin and end with curly braces
+                                 # not done yet !!
+
+               foreach $num ( @my_arr ) {
+                        $sum = $sum + $num ;
+                        $cnt++ 
+                                        }
+               print "Sum is:".$sum."  Number of numbers ".$cnt."\n" ;
+ 
+               $string1 = "Average is: "              ;
+               $string2 = $sum/$cnt."\n"              ;
+               print "$string1 $string2"              ;
+
+                       # Now we are done, note that you can even do math on a print line.
+                       # dots connect things togther into a single scalar
+                       # Now we end with the single tic that we started with 
+
+#
+                
+                
+
+
+
+
+

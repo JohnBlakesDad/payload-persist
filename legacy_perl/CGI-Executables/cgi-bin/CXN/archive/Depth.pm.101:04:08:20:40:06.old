@@ -1,0 +1,157 @@
+package CXN::Depth;
+
+use strict ;
+
+sub new {
+    my $self = {}                                        ;
+    my $class = shift                                    ;
+    $self -> {'db_name'} = shift                         ;
+    use CXN::Cgi                                         ;
+    $self -> {'cgi'}   = new CXN::Cgi                    ;
+    use CXN::DeepDB                                      ;
+    $self -> {'db'} = new CXN::DeepDB                    ;
+    use CXN::DepthUtil                                   ;
+    $self -> {'util'}  = new CXN::DepthUtil              ;
+    use CXN::Html                                        ;
+    $self -> {'html'}  = new CXN::Html                   ;
+    use CXN::Escape                                      ;
+    bless ($self, $class)                                ;
+    $self -> {'cgi'} -> get_vars                         ;
+    $self -> {'cgi'} -> get_env                     ;
+    return ( $self )
+}
+
+sub set_db {
+   my $self = shift                                     ;
+   my %arg = shift                                      ;
+   my @def = ( 'db', 'secret', 'write' )                ;
+   $self -> {'util'} -> {'db'} = $arg{'db'} if defined $arg{'db'}   ;
+   $self -> {'util'} -> {'secret'} = $arg{'secret'} if defined $arg{'secret'};
+   foreach (@def) {
+     $self -> {'util'} -> {$_} = $arg{$_} if defined $arg{$_}   ;
+     $util -> {secret} =  'tooloot'
+   }
+
+}
+
+sub start_html {
+   my $self = shift                                      ;
+   my %arg = @_                                          ;
+   my @header_def=('title','back_ground_color','text_color',
+                   'back_ground_image' )                 ;
+   my @header_args                                       ;
+   foreach (@header_def) { 
+     $arg{$_} = undef unless defined $arg{$_}            ;
+     push ( @header_args, $arg{$_} )
+   }  
+   my $html_string = $self->{'html'}->header(@header_args)."\n" ; 
+   if ( defined $arg{'css_file'} ) {
+      $html_string .= '<tmpl_include "'.$arg{'css_file'}.'">'. 
+        '<LINK rel="stylesheet" href="/'.$arg{'css_file'}.'>'."\n";
+   }
+   return $html_string ;
+}
+
+               ########################################
+               #                                      #
+               #    -*- DepthDB Methods Below -*-     #
+               #                                      #
+               ########################################
+
+
+sub db {
+    my $self = shift                                     ;
+    $type = shift                                        ;
+    return $self -> {'db'} -> db( $type )
+}         
+
+sub layer {
+    my $self = shift                                     ;
+    return $self -> {'db'} -> layer(@_)
+}
+
+sub depth {
+    my $self = shift                                     ;
+    return $self -> {'db'} -> depth(@_)
+}
+
+sub upd {
+    my $self = shift                                     ;
+    return $self -> {'db'} -> upd(@_)
+}
+
+sub del {
+    my $self = shift                                     ;
+    return $self -> {'db'} -> del(@_)
+}
+
+sub write {
+    my $self = shift                                     ;
+    return $self -> {'db'} -> write
+}
+
+sub pretty_print {
+    my $self = shift                                      ;
+    my $val                                               ;
+    if ( $val = shift ) { $self -> {pretty_print} = $val }  
+    else { $self -> {pretty_print} = 'yes' }
+    return $val 
+}
+
+sub serialize {
+    my $self = shift                                      ;
+    my $thing = shift ;
+    #my $thing = $self -> {"$thing"}                      ;
+    use Data::Dumper                                      ;
+    my $dump_str1 = Data::Dumper->new([$thing])           ;
+    $dump_str1 ->Indent(0) if $self -> {pretty_print} ne 'yes'     ;
+    $dump_str1 ->Names([$self -> {dump_name}])
+                        if $self -> {dump_name} ne ''     ;
+    my $ret                                               ;
+    $ret = $dump_str1->Dumpxs                             ;
+    return $ret
+}
+
+               #########################################
+               #        HTML Methods Below             # 
+               #                                       #
+               #    -*-  Depth , Edit, Upd     -*-     #
+               #         from Binaries                 #
+               #                                       #
+               #########################################
+
+sub Depth {
+
+}
+
+sub Upd {
+
+}
+
+sub Edit {
+
+}
+
+sub Edit_Object {
+
+}
+
+sub Upd_Object {
+
+}
+
+               #########################################
+               #                                       #
+               #    -*-   HTML Utilites Below   -*-    #
+               #                                       #
+               #########################################
+
+sub get_cgi_structures {
+   my $self = shift                                    ;
+}
+
+sub DESTROY {
+    my $self = shift                                            ;
+}
+
+1;

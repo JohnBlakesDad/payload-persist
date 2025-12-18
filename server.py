@@ -1,64 +1,56 @@
 import socket
-import os
-import json
+from lib import network, storage, protocol
 
-HOST = "127.0.0.1"
-PORT = 65432
+def handle_store(username, app_name, user_password, payload, conn):
+    try:
+        filename = storage.store_payload(username, app_name, user_password, payload)
+        print(f"Stored payload in {filename}")
+        conn.sendall(b"ACK: Payload stored")
+    except PermissionError:
+        print(f"Auth failed for user {username}")
+        conn.sendall(b"ERR: Authentication failed")
 
-def handle_store(app_name, payload, conn):
-    # Ensure directory exists
-    os.makedirs(app_name, exist_ok=True)
+def handle_retrieve(username, app_name, user_password, conn):
+    try:
+        result = storage.retrieve_latest_payload(username, app_name, user_password)
+        if not result:
+            conn.sendall(b"")
+            return
 
-    # Filename with timestamp
-    filename = os.path.join(app_name, f"backup-{payload['timestamp']}.json")
-
-    # Save payload
-    with open(filename, "w") as f:
-        json.dump(payload, f, indent=2)
-
-    print(f"Stored payload in {filename}")
-    conn.sendall(b"ACK: Payload stored")
-
-def handle_retrieve(app_name, conn):
-    if not os.path.exists(app_name):
-        conn.sendall(b"")
-        return
-
-    files = sorted(os.listdir(app_name))
-    if not files:
-        conn.sendall(b"")
-        return
-
-    latest = os.path.join(app_name, files[-1])
-    with open(latest, "r") as f:
-        data = f.read()
-
-    print(f"Sent payload from {latest}")
-    conn.sendall(data.encode("utf-8"))
+        data, latest = result
+        print(f"Sent payload from {latest}")
+        conn.sendall(data.encode("utf-8"))
+    except PermissionError:
+        print(f"Auth failed for user {username}")
+        conn.sendall(b"ERR: Authentication failed")
 
 def main():
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind((HOST, PORT))
-        s.listen()
-        print(f"Server listening on {HOST}:{PORT}...")
+    with network.start_server_socket() as s:
+        print(f"Server listening...")
         while True:
             conn, addr = s.accept()
             with conn:
                 print(f"Connected by {addr}")
-                data = conn.recv(8192)
+                data = network.receive_message(conn)
                 if not data:
                     continue
 
                 try:
-                    message = json.loads(data.decode("utf-8"))
+                    message = protocol.parse_message(data)
+                    if not message:
+                        continue
 
                     if message.get("command") == "REQUEST_SECRET":
+                        username = message["username"]
+                        user_password = message["user_password"]
                         app_name = message["app"]
-                        handle_retrieve(app_name, conn)
+                        handle_retrieve(username, app_name, user_password, conn)
                     else:
+                        username = message["username"]
+                        user_password = message["user_password"]
                         app_name = message["app"]
                         payload = message["payload"]
-                        handle_store(app_name, payload, conn)
+                        handle_store(username, app_name, user_password, payload, conn)
 
                 except Exception as e:
                     print("Error:", e)

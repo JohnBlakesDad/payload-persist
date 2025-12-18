@@ -1,0 +1,4 @@
+for i in *; do cat $i > tmp; echo >> tmp ; echo >> tmp ; echo "copyright CXN, Inc. copy only with permission, email john@thinman.com" >> tmp; mv tmp $i; done; 
+
+
+copyright CXN, Inc. copy only with permission, email john@thinman.com

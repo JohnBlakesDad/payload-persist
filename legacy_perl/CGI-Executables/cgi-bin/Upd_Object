@@ -1,0 +1,66 @@
+#!/usr/bin/perl -w
+
+use strict                       ;
+
+#unshift (@INC, '/adm/lib/')      ;
+unshift (@INC, '/home/httpd/cgi-bin/')      ;
+
+use CXN::Depth                               ;
+my $depth = new CXN::Depth                   ;
+
+print $depth -> start_html ;
+print "hello" ;
+
+$depth -> hidden_struct ;
+
+$depth -> set_db(
+                 'db' => $depth->{hidden_struct}{db}, 
+                 'secret'=> $depth->{hidden_struct}{secret},
+                 'write'=>'yes' ,
+                 'upd'=>'yes'
+                )                            ; 
+
+$depth->depth_array( depth_string => $depth->{hidden_struct}{depth_string} )  ;
+
+my @depth_array = @{$depth -> {depth_array}}      ;
+
+my $x = $depth -> db -> depth ( @{$depth -> {depth_array}} )     ;
+my $VAR1 ;
+$x = eval $x ;
+print $depth -> util -> mk_table ( $x ) ;
+
+my $upd_arr_addon = $depth->cgi->{'vars'}{'Upd_Ob_String'}  ;
+$upd_arr_addon =~ s/\s/_/g ;
+#$upd_arr_addon =~ s/\n/_/g ;
+$upd_arr_addon =~ s/_+/_/g ; 
+
+ $depth->cgi->{'vars'}{'Upd_Ob_String'}  ;
+
+if ( $depth->cgi->{ 'vars' }{ 'Upd_Ob_Opts' } eq 'new_ob' ) {
+  print "<BR>new_ob<BR>";
+  pop ( @depth_array ) ;
+  push (@depth_array, $upd_arr_addon )      ;
+  print $depth -> db -> upd ( @depth_array, undef )     ;
+  pop ( @depth_array ) ;
+}
+elsif ( $depth->cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'extend_ob' ) {
+  print "<BR>extend_ob<BR>";
+  push (@depth_array, $upd_arr_addon )      ;
+  #print "<BR>".join ( '++', @depth_array )."<BR>" ;
+  print $depth -> db -> upd ( @depth_array, undef )     ;
+}
+elsif ( $depth->cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'copy_ob' ) {
+  print "copy not ready yet"
+}
+
+elsif ( $depth->cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'link_ob' ) {
+  print "link not ready yet"
+}
+
+#print $depth -> depth ( @depth_array )     ;
+
+print $depth->cgi -> serialize ($depth->cgi)           ;
+
+print $depth->html -> end                       ;
+
+exit;

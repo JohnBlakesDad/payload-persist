@@ -1,0 +1,89 @@
+#!/usr/bin/perl -w
+
+use strict                       ;
+
+unshift (@INC, '/home/httpd/cgi-bin/') ;
+
+use CXN::Cgi                     ;
+  my $cgi   = new CXN::Cgi       ;
+
+use CXN::DeepDB                  ;
+  my $depth = new CXN::DeepDB    ;
+
+use CXN::DepthUtil               ;
+  my $util  = new CXN::DepthUtil ;
+
+use CXN::Html                    ;
+  my $html  = new CXN::Html      ;
+
+use CXN::Form                    ;
+  my $form  = new CXN::Form      ;
+
+use CXN::Escape                  ;
+
+$cgi -> get_vars                 ;
+$cgi -> get_env                  ;
+
+print $html -> header ( 'Puny Apps', undef , 'black', '/images/cuniform.gif' ) ;
+print "<tmpl_include \"/puny.css\">";
+print "<LINK rel=\"stylesheet\" href=\"http://puny.vm.com/puny.css\"> ";
+
+my $uri = $cgi -> {'env'}{'SCRIPT_NAME'}.'/'        ;
+#my $depth_string = $cgi->{'vars'}{'depth'}  ; 
+
+my $struct_string= $cgi -> {'vars'}{'hidden_struct'} ;
+
+$struct_string = uri_unescape($struct_string)                    ;
+
+my $VAR1 ;
+my $struct =  eval $struct_string ;
+
+my $upd_arr_addon = $cgi->{'vars'}{'Upd_Ob_String'}  ; 
+
+print $upd_arr_addon = uri_unescape($upd_arr_addon)                    ;
+
+use CXN::PersistOB ;
+my $pob = new CXN::PersistOB ;
+
+print "XXXXX";
+my $depth_string = $struct -> {'depth'}  ; 
+
+my @depth_array = split (/ +/, $depth_string)                    ;
+
+print "XnewX";
+print join ('-', @depth_array ) ;
+print "XXXyX";
+
+my $db = $struct -> {'db'}                 ;
+
+print $depth -> db( $db ) ;
+
+print $depth -> write     ;
+
+if ( $cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'new_ob' ) {
+  print "<BR>new_ob<BR>";
+  pop ( @depth_array ) ;
+  push (@depth_array, $upd_arr_addon )      ;
+  #print "<BR>".join ( '++', @depth_array )."<BR>" ;
+  $depth -> upd ( @depth_array, undef )     ;
+}
+elsif ( $cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'extend_ob' ) {
+  print "<BR>extend_ob<BR>";
+  push (@depth_array, $upd_arr_addon )      ;
+  #print "<BR>".join ( '++', @depth_array )."<BR>" ;
+  $depth -> upd ( @depth_array, undef )     ;
+}
+elsif ( $cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'copy_ob' ) {
+  print "copy not ready yet"
+}
+
+elsif ( $cgi-> { 'vars' }{ 'Upd_Ob_Opts' } eq 'link_ob' ) {
+  print "link not ready yet"
+}
+
+print $depth -> depth ( @depth_array )     ;
+print $cgi -> serialize ($cgi)           ;
+
+print $html -> end                       ;
+
+exit;

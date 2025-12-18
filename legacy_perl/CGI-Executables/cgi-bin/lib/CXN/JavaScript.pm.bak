@@ -1,0 +1,37 @@
+package CXN::JavaScript;
+
+sub new {
+    my $self = {}                                        ;
+    my $class = shift                                    ;
+    bless ($self, $class)                                ;
+    return ( $self )
+}
+
+sub hello {
+my $self = shift ;
+return "hello"
+}
+
+sub js_popup  {
+  my $self = shift                                              ;
+  my $out=<<END;
+<script language="JavaScript">
+
+<!--
+function UPD_OB(db, depth_str, val_str) {
+ upd = window.open(nm, "update_object", 'resizable=yes,scrollbars=no,status=0,width=250,height=330');
+ upd.document.writeln('<head><title>Depth UPD_OB</title></head>');
+ upd.document.writeln('<body bgcolor="lightblue" onload="if (window.focus!=null) { window.focus();}">');
+ upd.document.writeln(' xxxxx ');
+
+ upd.document.writeln('</body>');
+
+ upd.document.close();
+}
+// -->
+</script>
+END
+return $out
+}
+
+1;

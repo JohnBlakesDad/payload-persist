@@ -1,0 +1,97 @@
+#!/usr/bin/perl
+
+use strict                                   ;
+                
+#unshift (@INC, '/home/httpd/cgi-bin/')      ;
+#unshift (@INC, '/adm/lib/')      ;
+
+use CXN::Depth                               ;
+my $depth = new CXN::Depth                   ;
+
+use CXN::JavaScript ; my $js = new CXN::JavaScript ;
+
+
+print $depth -> start_html                   ;
+print $js -> window_close_fxn ;
+print $depth -> html -> font(+4)             ;
+
+$depth -> hidden_struct                      ;
+
+my $struct = $depth -> {hidden_struct}       ; 
+
+$depth -> set_db(
+                'db' => $struct->{db}, 
+                'secret'=> $struct->{secret},
+                'write'=>'yes',
+                'upd'=>'yes'
+                )                            ; 
+
+
+$depth -> depth_array ( depth_string => $struct->{depth_string} )        ;
+
+print $depth -> vector( 'uri'=> '/cgi-bin/Depth.lib/') . "<BR>"          ; 
+print $depth -> html -> div('center')                                    ;
+
+sub multi_form {
+   my $text = shift                                                      ;
+   my $hidden_struct_string = shift                                      ;
+   my $num_lines   = shift                                               ;
+   my $line_length = shift                                               ;
+   $num_lines += 2                                                       ;
+   if ( $num_lines < 4 ) { $num_lines = 4 }                              ;
+   $line_length += 4                                                     ;
+   if ( $line_length < 10 ) { $line_length = 10 }                        ;
+   print $depth -> form -> start_form ('Upd', 'Upd', '_TOP' )            ;
+   print $depth -> form -> multi_line ('upd_string', $line_length, $num_lines, $text, undef);
+   $hidden_struct_string 
+                   = CXN::Escape::uri_escape($hidden_struct_string)      ;
+   print $depth -> form -> hidden ( 'hidden_struct', $hidden_struct_string );
+   print $depth -> form 
+   #  ->button('Upd', 'onClick="javascript:window_close();"'  ) ;
+   #   ->button('Upd') ;
+   #  this does not work :(
+     ->image('Upd','/images/update_text.gif','onClick="javascript:window_close();"') ;
+
+   print $depth -> form -> end_form                                      ;
+print '<FORM><input type="button" value="close" onClick="javascript:window.close();" >';
+}
+
+#print '<BR> <FORM><input type="button" value="close" onClick="javascript:window.close();" ><BR>';
+
+my $text = $depth -> db -> depth ( @{$depth -> {depth_array}} )          ;
+my $VAR1 ;
+$text = eval $text ;
+
+my $struct_string = $depth -> serialize ( $depth->{hidden_struct} ) ;
+
+if ( ref $text eq 'HASH' ) { print $depth -> mk_table } 
+elsif (( ref $text eq 'ARRAY' ) and ( defined $text )) {
+   my $num_lines = @$text                          ;
+   my ( $line, $line_length, $last_line_length  )  ;        
+   foreach $line (@$text) {  
+      $line_length = length ( $line )              ;
+      $last_line_length = $line_length 
+           if $line_length > $last_line_length 
+   }
+   $line_length = $last_line_length                ;
+   $text = join ("\n", @$text )                    ;
+   multi_form ( $text, $struct_string, $num_lines, $line_length ) ;
+}
+elsif (( $text =~ /^\S$/ ) and ( defined $text )) { 
+   multi_form ( $text, $struct_string, 0, 0 )      ;
+}
+else { 
+   $text = ''                                      ;
+   multi_form ( $text, $struct_string, 0, 0 )      ;
+} 
+
+print $depth -> html -> div('left')                ;
+
+print $depth -> html -> text                       ;
+print $depth -> pretty_print                       ;
+print $depth -> serialize ( $struct )                 ;
+print $depth -> html -> untext                     ;
+print $depth -> html -> unfont                     ;
+print $depth -> html -> undiv                      ;
+
+print $depth -> html -> end                        ;

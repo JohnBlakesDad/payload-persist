@@ -1,0 +1,6 @@
+#!/perl/bin/perl
+
+use Gopts; eval Gopts::set_opts  ;
+
+print $opt_dodo ;
+print $opt_def

@@ -1,0 +1,46 @@
+#!/usr/bin/perl -w
+
+use strict                       ;
+
+unshift (@INC, '/adm/lib/')      ;
+
+use CXN::Depth                               ;
+my $depth = new CXN::Depth                   ;
+
+print $depth -> start_html ;
+
+$depth -> hidden_struct ;
+
+$depth -> set_db(
+                 'db' => $depth->{hidden_struct}{db}, 
+                 'secret'=> $depth->{hidden_struct}{secret},
+                 'write'=>'yes' ,
+                 'upd'=>'yes'
+                )                            ; 
+
+$depth->depth_array( depth_string => $depth->{hidden_struct}{depth_string} )  ;
+
+my $new_depth_array ;
+@$new_depth_array = @{$depth -> {depth_array}}      ;
+my $depth_array = $depth -> {depth_array} ;
+pop @$new_depth_array ;
+
+my $upd_arr_addon = $depth->cgi->{'vars'}{'Upd_Ob_String'}  ;
+
+$depth -> db -> del ( @$depth_array )     ;
+
+print join ( "<BR>", @$new_depth_array ) ;
+
+print $depth -> vector ( 'depth_array' =>  $new_depth_array , 'override' => 'yes' ) ;
+
+my $x = $depth -> db -> depth ( @{$depth_array} )     ;
+my $VAR1 ;
+$x = eval $x ;
+print $depth -> util -> mk_table ( $x ) ;
+
+print $depth -> depth ( @$depth_array )     ;
+print $depth->cgi -> serialize ($depth->cgi)           ;
+
+print $depth->html -> end                       ;
+
+exit;
