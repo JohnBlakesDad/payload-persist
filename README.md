@@ -1,61 +1,72 @@
 # Secret Server
 
-A portable, secure, file-based secrets manager designed for personal hotspot environments.
+### Simple. Transparent. Secure.
 
-## Architecture
-See [ARCHITECTURE.md](ARCHITECTURE.md) for deep technical details.
+**Secret Server** is a phone-friendly web app that allows you to safely store data such as passwords or more. The web side is a client that encrypts and sends data to a server that leverages file system hierarchy to store encrypted json files, 
 
-## Mobile Server Setup (Termux)
+It turns your phone into a local-first vault, where your data stays on your hardware and moves only over your own Wi-Fi.
 
-This project is optimized to run on Android using Termux. Follow these steps to turn your phone into the server.
+---
 
-### 1. Initial Setup
-1.  Install **Termux** from F-Droid (preferred) or Google Play.
-2.  Open Termux and copy your project files to the phone (e.g., using a USB cable or `git clone`).
-3.  Run the automated setup script:
-    ```bash
-    chmod +x setup_termux.sh
-    ./setup_termux.sh
-    ```
-    *(Note: The script updates your packages. If asked about "package maintainer's version" or encryption configuration, answer `Y` or choose the default "maintainer's version".)*
+## 🛡️ How it works (The Simple Flow)
 
-### 2. Running the Server (Manual)
-To start the server manually:
+It consists of these components:
+
+1.  **Vivify**: This is the interface. It organizes your data.
+2.  **Secrecy**: This is the lock. It scrambles (encrypts) your data on your device.
+3.  **Payload**: This is the box. It packs the scrambled data for storage.
+4.  **Server**: This is the shelf. It stores the boxes safely.
+
+**Because the "lock" (Secrecy) happens before the data (as payload) is sent and stored, the Server and (potentially) others only see encrypted data**
+
+---
+
+## 🔍 Please Audit
+
+- **Encryption Logic**: Check [`lib/secrecy.py`](lib/secrecy.py).
+- **Storage Logic**: Check [`lib/storage.py`](lib/storage.py).
+- **The Engine**: Check [`web_server.py`](web_server.py) or [`vivify.py`](vivify.py).
+
+---
+
+## 🚀 One-Step Installation (Termux)
+
+Copy and paste this into Termux to get started:
+
 ```bash
-./start_server.sh
+curl -sSL https://raw.githubusercontent.com/JohnBlakesDad/payload-persist/main/install.sh | bash
 ```
-The server will be available at `http://0.0.0.0:5001`.
 
-### 3. Auto-Start on Boot (Optional)
-To make the server start automatically when you turn on your phone:
+Usage:
+- Type `secret-server` to start the engine manually.
 
-1.  Install the **Termux:Boot** app from F-Droid.
-2.  Open the **Termux:Boot** app once to grant permissions.
-3.  In Termux, create the boot directory:
-    ```bash
-    mkdir -p ~/.termux/boot
-    ```
-4.  Copy our boot script there:
-    ```bash
-    cp termux_boot.sh ~/.termux/boot/
-    chmod +x ~/.termux/boot/termux_boot.sh
-    ```
-5.  **Restart your phone.** The server will start in the background!
+---
 
-### 4. Building the Android App (Standalone APK)
+## Using the web interface
 
-To build a standalone `.apk` that looks like a real app:
+Open `http://localhost:5001` in a browser (Chrome).
 
-1.  **Install Buildozer**:
-    ```bash
-    pip install buildozer
-    sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
-    ```
+## 📱 Running Automatically (Start on Boot)
 
-2.  **Build the APK**:
-    ```bash
-    buildozer android debug
-    ```
+If you want Secret Server to start every time you turn on your phone:
 
-3.  **Install on Phone**:
-    The resulting file will be in `bin/`. Transfer it to your phone and install it.
+1.  **Install the "Termux:Boot" app** (available on F-Droid).
+2.  **Open the app once** to register it.
+3.  **That's it!** The installation script already placed the boot script in the right place.
+
+---
+
+## 🏗 Architecture
+
+For a more detailed technical look, read the [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## 🧹 Uninstallation
+
+To remove everything cleanly:
+```bash
+cd ~/payload-persist && ./uninstall.sh
+```
+
+---
+
+

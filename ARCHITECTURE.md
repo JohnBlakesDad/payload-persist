@@ -1,187 +1,53 @@
-# Payload-Persist Architecture
+# Secret Server Architecture
 
-## Overview
+## The 4-Block Security Model
 
-The payload-persist system is designed to function as a standalone secrets keeper with a JSON-based structure for easy recognition and manipulation. This document outlines the initial structure before the Perl Depth.pm app is fully demystified.
+To keep things transparent and secure, Secret Server is divided into four simple "blocks." Each block has one job, making the whole system easy to audit.
 
-**Primary Goal**: Make the payload a JSON structure so the data hierarchy is easily recognizable.
+### 1. Vivify (The Input)
+- **Job**: Collects your data and organizes it.
+- **Why it’s cool**: It uses "autovivification." This means you can create deep folders (e.g., `Work > Projects > SecretKey`) just by typing the path. No complicated setup required.
 
----
+### 2. Secrecy (The Lock)
+- **Job**: Scrambles your data using GPG encryption.
+- **Why it matters**: This happens **on your device** before the data is sent anywhere else. Even the server that stores the data cannot read it.
 
-## System Operations
+### 3. Payload (The Box)
+- **Job**: Wraps the scrambled data into a JSON "package."
+- **Why it matters**: It adds a timestamp and your username so the server knows where to put the data on the shelf.
 
-### UPDATE or CREATION Flow
-
-```mermaid
-graph TD
-    A[User Input] --> B{Input Method}
-    B -->|Graphical| C[UI Input - vivify client]
-    B -->|Terminal| D[CLI Curses Input - vivify client]
-    C --> E[Autovivification Process]
-    D --> E
-    E --> F[Un-schema'd JSON<br/>Hash of Hashes Structure]
-    F --> G[Payload Initialization]
-    G --> H[Secrecy Encryption<br/>Secrets Encrypted]
-    H --> I[Payload Preparation<br/>Serialized/Frozen]
-    I --> J[IP Transmission to Server<br/>with DB-User Password]
-    J --> K[Server Processing]
-    K --> L[Strip First Two Layers<br/>name, app-name/topic]
-    L --> M[Extract Large Binary Chunks]
-    M --> N{Storage Decision}
-    N -->|Text Data| O[Store as JSON File]
-    N -->|Binary Data| P[Store as Binary Object]
-    
-    style H fill:#ff9999
-    style O fill:#99ff99
-    style P fill:#99ff99
-```
-
-#### Key Points
-
-1. **Client-Side Input**: 
-   - Graphical (UI) or curses (CLI) input within the vivify client
-   - Input is autovivified into un-schema'd JSON (hash of hashes) complex structure
-
-2. **Encryption & Transmission**:
-   - Payload is initialized and "secrecy" encrypts secrets
-   - Payload is prepared (serialized, frozen) for IP transmission
-   - Sent to server with db-user password
-
-3. **Server-Side Processing**:
-   - Server strips off first two layers: `name`, `app-name` (or other topic)
-   - Large binary chunks are extracted
-   - Remainder stored as JSON file or binary object
-   - **Not encrypted on server** for admin ease
-   - Secrets remain encrypted (client-side encryption in high-security context)
-   - Same password can be used for more casual access
+### 4. Server (The Shelf)
+- **Job**: Stores the "boxes" on your phone's disk.
+- **Why it’s secure**: The server only ever sees the scrambled data. It functions like a locked storage unit—it holds the boxes but doesn't have the keys.
 
 ---
 
-### RETRIEVAL Flow
+## The Data Flow (A-to-B)
 
-```mermaid
-graph TD
-    A[User Request] --> B{Input Method}
-    B -->|Graphical| C[UI Input - vivify client]
-    B -->|Terminal| D[CLI Curses Input - vivify client]
-    C --> E[Payload Creation]
-    D --> E
-    E --> F[Input Components:<br/>- name db top layer<br/>- app-name/other next layer<br/>- desired value path<br/>- db-user secret]
-    F --> G[Server Request<br/>with Credentials]
-    G --> H[Server Locates JSON File<br/>using app-name]
-    H --> I{Access Type}
-    I -->|Single Value| J[Perl-like Hash Navigation<br/>Traverse to Desired Depth]
-    I -->|Structure/Subset| K[Extract Whole Structure<br/>or Named Subset]
-    J --> L[Return Value as Payload<br/>Usually Encrypted]
-    K --> M[Form Structure into Payload]
-    M --> L
-    L --> N[Client Receives Payload]
-    N --> O[Reverse Creation Process]
-    O --> P[Print/Display Data]
-    
-    style L fill:#ff9999
-    style P fill:#99ccff
-```
+When you save a secret, it follows this straight line:
 
-#### Key Points
+`[Your Text]` -> **Vivify** (Organizes) -> **Secrecy** (Locks) -> **Payload** (Packs) -> **Server** (Stores)
 
-1. **Client-Side Request**:
-   - Same UI or CLI curses interface
-   - Payload created with:
-     - `name` (database top layer)
-     - `app-name` or other name (next layer)
-     - Desired value path (from hash of hashes JSON)
-     - DB-user secret
+When you retrieve a secret, it goes in reverse:
 
-2. **Server-Side Retrieval**:
-   - Access JSON file using `app-name`
-   - Navigate using Perl-like hash of hashes syntax
-   - Reach desired value at specified depth
-
-3. **Return Options**:
-   - **Single Value**: Return specific value (usually encrypted)
-   - **Structure/Subset**: Return whole structure or named subset as payload
-
-4. **Client-Side Processing**:
-   - Client receives payload
-   - Reverses creation process
-   - Prints/displays the data
+**Server** (Finds Box) -> **Payload** (Unpacks) -> **Secrecy** (Unlocks) -> **Vivify** (Displays)
 
 ---
 
-## Data Structure Hierarchy
+## How this protects data
 
-```mermaid
-graph TD
-    A[Root] --> B[name - DB Top Layer]
-    B --> C[app-name/topic - Second Layer]
-    C --> D[Hash of Hashes Structure]
-    D --> E[Key 1]
-    D --> F[Key 2]
-    D --> G[Key N]
-    E --> H[Value or Nested Hash]
-    F --> I[Value or Nested Hash]
-    G --> J[Value or Nested Hash]
-    H --> K[Deeper Nesting...]
-    
-    style B fill:#ffcc99
-    style C fill:#ffcc99
-    style D fill:#99ccff
-```
-
-### Layer Breakdown
-
-1. **Layer 1**: `name` - Database top layer (stripped by server)
-2. **Layer 2**: `app-name` or topic - Application identifier (stripped by server)
-3. **Layer 3+**: Hash of hashes JSON structure (stored on server)
-   - Navigable using Perl-like syntax
-   - Arbitrary depth supported
-   - Values can be encrypted secrets or plain data
-
----
-
-## Security Model
-
-```mermaid
-graph LR
-    A[Client High-Security Context] -->|Encrypts| B[Secrets]
-    B --> C[Encrypted Payload]
-    C -->|Transmitted| D[Server]
-    D -->|Stores| E[JSON with Encrypted Secrets]
-    E -->|No Server-Side Decryption| F[Admin Can View Structure<br/>But Not Decrypt Secrets]
-    
-    style A fill:#ff9999
-    style B fill:#ff9999
-    style C fill:#ff9999
-    style E fill:#ffff99
-    style F fill:#99ff99
-```
-
-### Security Characteristics
-
-- **Client-side encryption**: Secrets encrypted in high-security context before transmission
-- **Server storage**: JSON stored unencrypted for admin ease
-- **Secret protection**: Secrets cannot be decrypted on server (no keys available)
-- **Password usage**: Same db-user password for both secure and casual access
-- **Separation of concerns**: Structure visible to admins, secrets remain protected
+1.  **Encrypted at Rest**: Your secrets are stored as scrambled gibberish on the disk.
+2.  **Encrypted in Transit**: Even if someone "sniffed" your Wi-Fi, they would only see the scrambled boxes being moved.
+3.  **No Master Key**: There is no central server or company that holds a master key. Only your password can unlock your data.
 
 ---
 
 ## Technology Stack
-
-- **Client**: vivify (UI/CLI with curses)
-- **Data Format**: JSON (hash of hashes)
-- **Serialization**: Frozen/serialized payloads
-- **Navigation**: Perl-like hash of hashes syntax (Depth.pm)
-- **Encryption**: Client-side "secrecy" encryption
-- **Transport**: IP-based transmission
-- **Storage**: JSON files and binary objects
+- **CLI/Engine**: Python 3 (curses, json, gnupg)
+- **Web Interface**: HTML5, Vanilla JS, CSS3
+- **Transport**: Flask (HTTP/REST interface for storage)
+- **Storage**: Plain JSON files (Human-readable filesystem structure)
 
 ---
 
-## Future Considerations
 
-- Full demystification of Perl Depth.pm app
-- Enhanced autovivification capabilities
-- Improved structure navigation
-- Extended security features
