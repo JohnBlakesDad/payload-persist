@@ -13,7 +13,39 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
     return response
+
+@app.before_request
+def restrict_access():
+    """
+    Security Gatekeeper:
+    Only allow access from:
+    1. Localhost (The phone itself)
+    2. Devices listed in the ARP table (Connected to Hotspot/Wifi)
+    """
+    # Always allow static files (handled by Flask mostly, but good to be safe) if needed, 
+    # but for high security we gate everything.
+    
+    remote_ip = request.remote_addr
+    
+    # 1. Allow Localhost
+    if remote_ip == '127.0.0.1' or remote_ip == 'localhost':
+        return None  # Access Granted
+        
+    # 2. Allow Connected Peers (Hotspot Clients)
+    # We refresh this list on every request. For performance in high-load scenarios 
+    # we might cache, but for this use case, real-time is safer.
+    from lib import network
+    allowed_peers = network.get_connected_peers()
+    
+    if remote_ip in allowed_peers:
+        return None  # Access Granted
+        
+    # 3. Deny Everyone Else
+    # Log the attempt for security auditing
+    print(f"SECURITY ALERT: Blocked access attempt from {remote_ip}")
+    return jsonify({'error': 'Access Denied: You must be connected to the secure hotspot.'}), 403
 
 @app.route('/')
 def index():
